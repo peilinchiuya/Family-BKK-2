@@ -1,0 +1,1326 @@
+html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>曼谷度假時光 Bangkok 2026</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+        .ease-spring { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1.5); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-shake { animation: shake 0.4s ease-in-out infinite; }
+        
+        input, textarea { font-size: 16px !important; }
+        .polaroid-card { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        
+        /* 升級版曼谷玻璃透視質感 */
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 8px 32px 0 rgba(249, 115, 22, 0.05); }
+        .watermark { position: absolute; pointer-events: none; user-select: none; mix-blend-mode: multiply; z-index: 0; opacity: 0.12; transition: all 0.3s ease; }
+
+        @media print {
+            html, body { background: white !important; height: auto !important; min-height: auto !important; overflow: visible !important; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            #app-container { display: none !important; }
+            #booklet-preview-container { position: static !important; display: block !important; height: auto !important; min-height: auto !important; overflow: visible !important; background: white !important; }
+            #booklet-preview-container > div { overflow: visible !important; height: auto !important; }
+            .print-hide { display: none !important; }
+            .page-break { page-break-before: always !important; break-before: page !important; }
+            .avoid-break { page-break-inside: avoid !important; break-inside: avoid !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#FFF9F2] text-[#4A3B32] font-sans selection:bg-[#F97316] selection:text-white relative">
+
+    <script>
+        window.showToast = (msg) => {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-10 left-1/2 -translate-x-1/2 bg-gray-800/95 backdrop-blur text-white px-6 py-3 rounded-full shadow-2xl z-[9999] font-bold text-sm animate-pop border border-gray-600 whitespace-nowrap print-hide';
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        };
+    </script>
+
+    <div id="app-container" class="max-w-[480px] mx-auto min-h-screen relative overflow-x-hidden pb-40 print-hide">
+        <!-- 升級版背景光暈特效 -->
+        <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden max-w-[480px] mx-auto bg-[#FFF9F2]">
+            <div class="absolute top-[-5%] left-[-10%] w-[350px] h-[350px] bg-gradient-to-br from-orange-300/30 to-rose-300/20 rounded-full blur-3xl"></div>
+            <div class="absolute top-[35%] right-[-20%] w-[450px] h-[450px] bg-gradient-to-br from-teal-300/20 to-sky-300/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-[5%] left-[10%] w-[400px] h-[400px] bg-gradient-to-br from-yellow-300/20 to-orange-300/20 rounded-full blur-3xl"></div>
+            <div class="absolute inset-0 opacity-[0.15]" style="background-image: radial-gradient(#F97316 1px, transparent 1px); background-size: 24px 24px;"></div>
+        </div>
+
+        <header class="h-[230px] relative overflow-hidden shadow-sm z-10 rounded-b-[2.5rem] bg-white border-b border-orange-100" id="app-header"></header>
+        <main class="relative z-10" id="main-content"></main>
+        <nav class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white/90 backdrop-blur-lg border-t border-orange-50 shadow-[0_-15px_30px_rgba(249,115,22,0.08)] flex justify-between items-center pt-3 pb-8 px-2 z-40 rounded-t-[2.5rem]" id="bottom-nav"></nav>
+        <div id="modal-root" class="relative z-50"></div>
+    </div>
+
+    <div id="booklet-preview-container" class="hidden absolute inset-0 z-[999] bg-[#FFF9F2] min-h-screen w-full overflow-y-auto"></div>
+
+    <input type="file" id="itinerary-photo-upload" class="hidden" accept="image/*" onchange="window.handleItineraryPhotoUpload(event)">
+    <input type="file" id="shopping-photo-upload" class="hidden" accept="image/*" onchange="window.handleShoppingPhotoUpload(event)">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { initializeFirestore, memoryLocalCache, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 🌟 1. Firebase 金鑰
+        const MY_OWN_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyBlMxqf738w9YgM9FLBqK5-qJYE_Bumjfw",
+            authDomain: "bangkok-648f4.firebaseapp.com",
+            projectId: "bangkok-648f4",
+            storageBucket: "bangkok-648f4.firebasestorage.app",
+            messagingSenderId: "144110237020",
+            appId: "1:144110237020:web:7d8dc8500974a265c67d99"
+        };
+
+        // 🖼️ 2. 不重複的圖示與浮水印替換區
+        const CUSTOM_IMAGES = {
+            banner: 'https://duk.tw/3RaJj4.png', 
+            exchangeIcon: 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png', 
+            moneyGoneIcon: 'https://cdn-icons-png.flaticon.com/512/3135/3135706.png', 
+            watermarks: {
+                prep: 'https://duk.tw/AkIwAZ.png',       // 大耳狗 (行李清單)
+                wish: 'https://duk.tw/XyQ4OQ.png',       // 吉伊卡哇魔法 (許願池)
+                account: 'https://duk.tw/0JZFA4.png',    // 帕恰狗 (記帳)
+                tool: 'https://duk.tw/zBRmvf.png',       // 吉伊卡哇開心 (轉盤/工具)
+                modalEdit: 'https://duk.tw/euSpN0.png',  // 酷洛米 (編輯彈窗)
+                modalAdd: 'https://duk.tw/P5fHdp.png',   // 小八貓 (新增彈窗)
+                modalExpense: 'https://duk.tw/9P6maK.png',// 庫洛米 (記帳彈窗)
+                modalShop: 'https://duk.tw/5RtXJW.png'   // 三麗鷗 (購物彈窗)
+            }
+        };
+
+        // 10 天專屬的吉伊卡哇圖示 (不重複)
+        const dayIcons = [ 
+            'https://duk.tw/sZr9Vf.png', 
+            'https://duk.tw/qTqGJf.png', 
+            'https://duk.tw/IWMz4L.png', 
+            'https://duk.tw/Of6y5G.png', 
+            'https://duk.tw/Flf3Ad.png',
+            'https://duk.tw/W77EfE.png',
+            'https://duk.tw/XJQK66.png',
+            'https://duk.tw/5DOXfD.png',
+            'https://duk.tw/puESqp.png',
+            'https://duk.tw/tYKkTE.png' 
+        ];
+        
+        const CustomIcons = { Utensils: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`, Copy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`, Bag: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>` };
+        
+        // 👥 3. 旅伴設定
+        const userProfiles = { 
+            'peilin': { name: '貝琳', color: 'bg-pink-100 text-pink-600', border: 'border-pink-200', img: 'https://duk.tw/DF8EHi.png', badge: 'bg-pink-500' }, 
+            'mom': { name: '媽媽', color: 'bg-orange-100 text-orange-600', border: 'border-orange-200', img: 'https://duk.tw/jAv6XN.png', badge: 'bg-orange-500' }, 
+            'chihjung': { name: '志榮', color: 'bg-blue-100 text-blue-600', border: 'border-blue-200', img: 'https://duk.tw/r9Sph2.png', badge: 'bg-blue-500' }, 
+            'chunyen': { name: '俊彥', color: 'bg-green-100 text-green-600', border: 'border-green-200', img: 'https://duk.tw/8tDsS9.png', badge: 'bg-green-500' }, 
+            'guest': { name: '訪客', color: 'bg-gray-100 text-gray-600', border: 'border-gray-300', icon: '🕵️', badge: 'bg-gray-500' }, 
+            'all': { name: '共同', color: 'bg-gray-100 text-gray-600', border: 'border-gray-200', icon: '🌟', badge: 'bg-gray-500' } 
+        };
+
+        // 🇹🇭 4. 曼谷行程設定 (10天，加入大城天氣定位)
+        const locationsMap = { 
+            'day1': { lat: 13.7563, lon: 100.5018, name: '曼谷' }, 
+            'day2': { lat: 13.7563, lon: 100.5018, name: '曼谷' }, 
+            'day3': { lat: 13.7563, lon: 100.5018, name: '曼谷' }, 
+            'day4': { lat: 14.3516, lon: 100.5694, name: '大城' }, // Day 4 (12/21) 大城天氣
+            'day5': { lat: 13.7563, lon: 100.5018, name: '曼谷' },
+            'day6': { lat: 13.7563, lon: 100.5018, name: '曼谷' },
+            'day7': { lat: 13.7563, lon: 100.5018, name: '曼谷' },
+            'day8': { lat: 13.7563, lon: 100.5018, name: '曼谷' },
+            'day9': { lat: 13.7563, lon: 100.5018, name: '曼谷' },
+            'day10': { lat: 13.7563, lon: 100.5018, name: '曼谷' }
+        };
+        
+        const days = [ 
+            { id: 'day1', date: '12/18', name: '曼谷', icon: dayIcons[0] }, 
+            { id: 'day2', date: '12/19', name: '曼谷', icon: dayIcons[1] }, 
+            { id: 'day3', date: '12/20', name: '曼谷', icon: dayIcons[2] }, 
+            { id: 'day4', date: '12/21', name: '大城', icon: dayIcons[3] }, 
+            { id: 'day5', date: '12/22', name: '曼谷', icon: dayIcons[4] },
+            { id: 'day6', date: '12/23', name: '曼谷', icon: dayIcons[5] },
+            { id: 'day7', date: '12/24', name: '曼谷', icon: dayIcons[6] },
+            { id: 'day8', date: '12/25', name: '曼谷', icon: dayIcons[7] },
+            { id: 'day9', date: '12/26', name: '曼谷', icon: dayIcons[8] },
+            { id: 'day10', date: '12/27', name: '曼谷', icon: dayIcons[9] }
+        ];
+        
+        const initialItineraryData = {
+            'day1': [
+                { type: 'flight', time: '22:30 - 01:35+1', location: '中華航空 CI 出發', notes: '搭乘夜間航班出發前往曼谷！', detail: 'TPE -> BKK', addedBy: 'peilin' },
+                { type: 'hotel', time: '凌晨', location: 'JASMINE 59 Hotel', notes: '抵達飯店！趕快休息補眠', addedBy: 'peilin' }
+            ],
+            'day2': [
+                { type: 'spot', time: '下午', location: '洽圖洽週末市集 Chatuchak', notes: '泰國最大市集！準備好爆買！', addedBy: 'chunyen' },
+                { type: 'food', time: '19:45-21:45', location: '白蘭花遊船 White Orchid Cruise', notes: '享受昭披耶河夜景與晚餐', addedBy: 'mom' },
+                { type: 'spot', time: '22:15後', location: 'Nikko Thai Massage 5', notes: '90分鐘按摩，消除疲勞', addedBy: 'chihjung' },
+                { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '續住', addedBy: 'peilin' }
+            ],
+            'day3': [
+                { type: 'spot', time: '08:15-09:15', location: '美功鐵道市場', notes: '看09:00火車經過！', addedBy: 'peilin' },
+                { type: 'food', time: '10:15-12:00', location: 'Bubble in the Forest Cafe', notes: '超美馬爾地夫風網美咖啡廳，狂拍照', addedBy: 'peilin' },
+                { type: 'spot', time: '12:30-14:30', location: '空叻瑪榮水上市場 + 午餐', notes: '逛在地市集吃美食', addedBy: 'mom' },
+                { type: 'food', time: '16:00-18:30', location: '吞武里海鮮市場 (晚餐)', notes: '晚餐大吃海鮮！', addedBy: 'chihjung' },
+                { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '續住', addedBy: 'peilin' }
+            ],
+            'day4': [
+                { type: 'spot', time: '08:00-11:00', location: '大城獅子王野生動物園', notes: '跟長頸鹿近距離拍照！', addedBy: 'peilin' },
+                { type: 'food', time: '11:15-12:15', location: 'Pa Lek Boat Noodles', notes: '大城必吃必比登船麵', addedBy: 'peilin' },
+                { type: 'spot', time: '12:30-13:45', location: '柴瓦塔那蘭寺', notes: '絕美高棉風格古蹟遺跡', addedBy: 'chunyen' },
+                { type: 'spot', time: '14:00-15:00', location: '瑪哈泰寺', notes: '看經典的樹中佛頭', addedBy: 'mom' },
+                { type: 'transport', time: '約17:00', location: '返回曼谷', notes: '搭車回曼谷市區', addedBy: 'peilin' },
+                { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '續住', addedBy: 'peilin' }
+            ],
+            'day5': [
+                { type: 'spot', time: '08:00-12:00', location: '鄭王廟泰服 + 攝影體驗', notes: '穿著華麗泰服拍大片！', addedBy: 'peilin' },
+                { type: 'food', time: '12:00-13:30', location: 'NAMA 日料吃到飽 (午餐)', notes: '爽吃精緻高級日料', addedBy: 'chihjung' },
+                { type: 'hotel', time: '下午', location: '入住 Kimpton Maa-Lai Bangkok', notes: '辦理入住，享受頂級飯店設施、泳池、拍照', addedBy: 'peilin' },
+                { type: 'spot', time: '下午-晚上', location: '飯店休息', notes: '享受設施、耍廢充電', addedBy: 'mom' }
+            ],
+            'day6': [
+                { type: 'food', time: '08:00-10:00', location: 'Kimpton 早餐', notes: '品嚐超豐盛飯店早餐', addedBy: 'peilin' },
+                { type: 'hotel', time: '10:00-11:00', location: '整理行李 -> Check-out', notes: '換回 JASMINE 59 Hotel 續住', addedBy: 'peilin' },
+                { type: 'spot', time: '下午', location: 'ICONSIAM / 自由活動', notes: '逛室內水上市場、血拚', addedBy: 'mom' },
+                { type: 'food', time: '晚上', location: 'COOPER BUFFET 晚餐', notes: '豪華自助餐晚餐', addedBy: 'chunyen' }
+            ],
+            'day7': [
+                { type: 'flight', time: '清晨', location: '弟弟前往機場回台', notes: '志榮先回台灣囉！', addedBy: 'chihjung' },
+                { type: 'spot', time: '白天-晚上', location: '其餘成員自由活動', notes: '依照喜好安排按摩、購物或咖啡廳', addedBy: 'peilin' },
+                { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '續住', addedBy: 'peilin' }
+            ],
+            'day8': [
+                { type: 'spot', time: '全天', location: '曼谷慢旅行', notes: '購物 / 咖啡廳 / 按摩 / 美食，彈性安排', addedBy: 'peilin' },
+                { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '續住', addedBy: 'peilin' }
+            ],
+            'day9': [
+                { type: 'spot', time: '白天', location: '自由活動', notes: '把握最後血拚與按摩機會', addedBy: 'peilin' },
+                { type: 'food', time: '傍晚-晚上', location: '昭披耶河景觀餐廳', notes: '看夕陽，享受曼谷最後的浪漫晚餐', addedBy: 'mom' },
+                { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '最後一晚！整理戰利品！', addedBy: 'peilin' }
+            ],
+            'day10': [
+                { type: 'transport', time: '上午', location: 'Check-out -> 前往機場', notes: '準備回家囉', addedBy: 'peilin' },
+                { type: 'flight', time: '14:05 - 18:40', location: '中華航空 CI 回台', notes: '平安抵達台灣！滿載而歸！', detail: 'BKK -> TPE', addedBy: 'peilin' }
+            ]
+        };
+
+        const defaultChecklist = [ { id: 1, text: "護照、泰銖與信用卡", checked: false, assignee: 'all' }, { id: 2, text: "簽證/電子簽", checked: false, assignee: 'all' }, { id: 3, text: "泰國上網 SIM 卡", checked: false, assignee: 'peilin' }, { id: 4, text: "腸胃藥、防蚊液", checked: false, assignee: 'mom' }, { id: 5, text: "隨身小電風扇、薄外套", checked: false, assignee: 'chunyen' } ];
+
+        const state = {
+            currentUser: null, 
+            isDataLoaded: false,
+            activeTab: 'itinerary', activeDay: 'day1', activeChecklistTab: 'all', activeListMode: 'checklist', activeMemoryMode: 'photo', wishCategory: 'food', diaryMood: '🥰', 
+            jpyInput: 1000, exchangeRate: 0.9, isEditingRate: false, copied: false, gachaResult: null, gachaAnimating: false, isFortuneDrawing: false, fortuneResult: null, 
+            syncStatus: 'syncing', memories: [], itinerary: initialItineraryData, checklist: defaultChecklist, expenses: [], wishes: [], diaries: [], shoppingList: [],
+            modalConfig: { isOpen: false, isEdit: false, dayId: '', index: null }, expenseModal: { isOpen: false, description: '', amount: '', currency: 'THB' }, shoppingModal: { isOpen: false, isEdit: false, id: null, name: '', price: '', image: null }, imageViewer: { isOpen: false, src: '' }, formData: { type: 'spot', time: '10:00-12:00', location: '', notes: '', detail: '', highlights: '' }, deleteConfirm: { isOpen: false, dayId: '', index: null, location: '' }, showUserSelect: true, uploadingItineraryPhoto: { dayId: null, idx: null }, isTabSwitch: true, needsScrollCenter: true, lastDaysScroll: 0
+        };
+        window.state = state; 
+
+        const getIsGuest = () => state.currentUser === 'guest';
+        window.app = null; window.auth = null; window.db = null;
+        
+        try {
+            window.app = initializeApp(MY_OWN_FIREBASE_CONFIG); window.auth = getAuth(window.app); window.db = initializeFirestore(window.app, { localCache: memoryLocalCache() });
+            signInAnonymously(window.auth).catch(err => { console.error("登入失敗:", err); state.syncStatus = 'error'; window.renderDOM(); });
+            onAuthStateChanged(window.auth, (u) => {
+                if (u) {
+                    onSnapshot(doc(window.db, 'bangkok_trip', 'shared_data'), (snapshot) => {
+                        state.isDataLoaded = true;
+                        if (snapshot.exists()) {
+                            const data = snapshot.data();
+                            
+                            // 🚨 強制更新救援機制：偵測到雲端資料若沒有 10 天，強制用最新的 10 天覆蓋它！
+                            if (!data.itinerary || !data.itinerary['day10']) {
+                                console.log("偵測到雲端為舊版資料，執行強制更新至 10 天行程！");
+                                state.itinerary = initialItineraryData; 
+                                state.checklist = data.checklist || defaultChecklist;
+                                state.memories = data.memories || []; 
+                                state.expenses = data.expenses || []; 
+                                state.wishes = data.wishes || []; 
+                                state.diaries = data.diaries || []; 
+                                state.exchangeRate = data.exchangeRate || 0.9; 
+                                state.shoppingList = data.shoppingList || [];
+                                window.saveToCloud(); 
+                            } else {
+                                state.itinerary = data.itinerary; 
+                                state.checklist = data.checklist || defaultChecklist;
+                                state.memories = data.memories || []; 
+                                state.expenses = data.expenses || []; 
+                                state.wishes = data.wishes || []; 
+                                state.diaries = data.diaries || []; 
+                                state.exchangeRate = data.exchangeRate || 0.9; 
+                                state.shoppingList = data.shoppingList || [];
+                            }
+                            
+                            state.syncStatus = 'synced'; window.renderDOM();
+                        } else {
+                            window.saveToCloud();
+                        }
+                    }, (error) => { state.syncStatus = 'error'; window.renderDOM(); });
+                }
+            });
+        } catch (e) { state.syncStatus = 'error'; window.renderDOM(); }
+
+        window.saveToCloud = async () => {
+            if (!window.auth || !window.auth.currentUser || !window.db || !state.isDataLoaded) return;
+            state.syncStatus = 'syncing'; window.renderDOM();
+            try {
+                await setDoc(doc(window.db, 'bangkok_trip', 'shared_data'), { itinerary: state.itinerary, checklist: state.checklist, memories: state.memories, expenses: state.expenses, wishes: state.wishes, diaries: state.diaries, exchangeRate: state.exchangeRate, shoppingList: state.shoppingList });
+                state.syncStatus = 'synced'; window.renderDOM();
+            } catch (e) { state.syncStatus = 'error'; window.renderDOM(); }
+        };
+
+        window.weatherCache = {};
+        window.fetchWeather = async (dayId) => {
+            if (window.weatherCache[dayId]) return;
+            window.weatherCache[dayId] = { loading: true }; window.renderDOM();
+            try {
+                const loc = locationsMap[dayId]; const dayInfo = days.find(d => d.id === dayId);
+                const [m, d] = dayInfo.date.split('/'); const targetDate = `2026-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+                let res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok&start_date=${targetDate}&end_date=${targetDate}`);
+                let isFb = false; if (!res.ok) { res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok&forecast_days=1`); isFb = true; }
+                const data = await res.json();
+                const max = Math.round(data.daily.temperature_2m_max[0]), min = Math.round(data.daily.temperature_2m_min[0]), code = data.daily.weathercode[0];
+                let icon = '<i data-lucide="sun" class="text-orange-500"></i>', desc = '晴朗';
+                if ([1, 2, 3].includes(code)) { icon = '<i data-lucide="cloud" class="text-sky-300"></i>'; desc = '多雲'; } else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) { icon = '<i data-lucide="cloud-rain" class="text-sky-500"></i>'; desc = '下雨'; }
+                window.weatherCache[dayId] = { loading: false, max, min, icon, desc, locName: loc.name, isFallback: isFb, targetDate: dayInfo.date };
+            } catch (e) { window.weatherCache[dayId] = { loading: false, error: true }; }
+            window.renderDOM();
+        };
+
+        const escapeHTML = (str) => { if (!str) return ''; return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); };
+        const getGreeting = () => { const h = new Date().getHours(); if (h < 11) return '早安薩瓦迪卡！準備出門啦！'; if (h < 17) return '午安！天氣好熱記得喝泰奶！'; return '晚安～準備去夜市大吃特吃！'; };
+        const getCountdown = () => { const diff = Math.ceil((new Date('2026-12-18T00:00:00+08:00') - new Date()) / (1000 * 60 * 60 * 24)); return diff > 0 ? `距離出發還有 <span class="text-[#F97316] font-black mx-1 text-sm bg-orange-100 px-2 py-0.5 rounded shadow-inner">${diff}</span> 天！` : `旅途愉快！🐘`; };
+        
+        // ✨ 超生動！泰國專屬小象 AI 導覽 ✨
+        const getAIGuide = (loc, not) => {
+            const t = (String(loc) + ' ' + String(not || '')).toLowerCase();
+            
+            // 新增的航班與專屬景點
+            if (t.includes('中華航空') || t.includes('出發')) return '準備搭乘中華航空出發囉！晚上在飛機上好好睡一覺，一睜眼就到曼谷啦！✈️🐘';
+            if (t.includes('回台')) return '中華航空準備帶大家回溫暖的台灣囉！這趟 10 天的旅程是不是超棒的？期待下次再一起出遊！✈️🇹🇭';
+            if (t.includes('洽圖洽') || t.includes('chatuchak')) return '洽圖洽有超過一萬五千個攤位！推薦去吃椰子冰淇淋、買香氛和編織包，記得帶夠現金喔！🥥🛍️';
+            if (t.includes('遊船') || t.includes('cruise') || t.includes('白蘭花')) return '白蘭花遊船不僅有超豐盛的 Buffet，還有超嗨的現場演出！在甲板上吹風看鄭王廟夜景超浪漫！🚢💃';
+            if (t.includes('鐵道') || t.includes('美功')) return '美功鐵道市場最狂的就是看火車貼著菜攤開過去！09:00那班一定要卡好位錄影，超震撼的啦！🚂⛺';
+            if (t.includes('bubble')) return '傳說中的曼谷小馬爾地夫！記得穿最仙的洋裝，坐在水上漂浮包廂拍照，不用濾鏡就美翻天！☕🏝️';
+            if (t.includes('水上市場') || t.includes('空叻瑪榮')) return '空叻瑪榮水上市場超在地！一定要吃烤魚、烤大頭蝦，搭著手搖船買東西就是最道地的體驗！🛶🦐';
+            if (t.includes('吞武里')) return '吞武里海鮮市場根本是海鮮控天堂！現挑現烤，那個烤龍蝦的香味...小象我的口水都要流下來了！🦞🤤';
+            if (t.includes('動物園') || t.includes('獅子王')) return '大城動物園可以站在吉普車上跟長頸鹿貼貼！牠們的舌頭真的好長呀哈！記得多買幾盆紅蘿蔔餵牠們喔！🦒📸';
+            if (t.includes('船麵') || t.includes('boat noodle') || t.includes('pa lek')) return 'Pa Lek 船麵是米其林必比登推薦！湯頭濃郁帶點中藥香，一碗只要幾十泰銖，直接疊起10個空碗吧！🍜🐘';
+            if (t.includes('柴瓦塔那蘭寺')) return '這裡是《天生一對》的拍攝地！夕陽西下時的高棉風格佛塔剪影，美到讓人屏息！🌅🛕';
+            if (t.includes('瑪哈泰寺') || t.includes('佛頭')) return '瑪哈泰寺最著名的就是『樹中佛頭』！拍照時記得要蹲下，高度不能超過佛頭以示尊敬喔！🌳🙏';
+            if (t.includes('鄭王廟') || t.includes('泰服')) return '來到鄭王廟一定要租一套華麗的傳統泰服！金光閃閃的配飾加上純白色的佛塔，直接變身泰國公主/王子！🇹🇭✨';
+            if (t.includes('nama') || t.includes('日料')) return 'NAMA 日料吃到飽超狂！生魚片、和牛、海膽通通有，午餐時段來大吃一頓補充體力最棒了！🍣🍣';
+            if (t.includes('kimpton') || t.includes('maa-lai')) return 'Kimpton Maa-Lai 是曼谷超頂級的酒店！那個無邊際泳池跟超 Chill 的氛圍，進去就不想出來了啦！🏨🥂';
+            if (t.includes('iconsiam')) return 'ICONSIAM 把整個水上市場搬進室內了！吹著冷氣吃泰國小吃超舒服，晚上還要在河畔看水舞秀喔！🛍️🚤';
+            if (t.includes('cooper')) return 'COOPER BUFFET 裡有和牛、龍蝦、烤生蠔！這絕對是痛風等級的豪華晚餐，戰鬥力全開！🥩🔥';
+            if (t.includes('按摩') || t.includes('spa') || t.includes('massage') || t.includes('nikko')) return '剛下飛機加上逛街，腳一定很酸！按摩按下去那一刻絕對會忍不住『舒服～』地叫出來！💆‍♀️🥭';
+            
+            // 通用
+            if (t.includes('機場') || t.includes('bkk')) return '薩瓦迪卡！抵達曼谷啦！準備開始度假！✈️🐘';
+            if (t.includes('吃') || t.includes('餐廳') || t.includes('泰奶') || t.includes('晚餐')) return '泰國的美食又酸又辣超級開胃！記得點一杯泰式奶茶解辣喔！😋🥤';
+            if (t.includes('買') || t.includes('big c') || t.includes('購物') || t.includes('市集')) return '泰國的零食超好買！海苔、Pocky、薄荷棒通通掃進購物車裡！🛒💸';
+            if (t.includes('宿') || t.includes('飯店') || t.includes('旅館') || t.includes('jasmine')) return '回到飯店好好休息吧！明天還有很多好玩的地方在等著我們！💤🏨';
+            
+            return '這個行程聽起來很棒！小象已經幫你記下來了，我們到時候一起去探索！🐘✨';
+        };
+
+        window.renderDOM = () => {
+            renderHeader(); renderMainContent(); renderNav(); renderModals();
+            setTimeout(() => { 
+                if (window.lucide) window.lucide.createIcons(); 
+                const scrollContainer = document.getElementById('days-scroll-container');
+                const activeBtn = document.getElementById('active-day-btn');
+                if (scrollContainer && activeBtn && state.activeTab === 'itinerary') {
+                    const containerCenter = scrollContainer.offsetWidth / 2;
+                    const btnCenter = activeBtn.offsetLeft + (activeBtn.offsetWidth / 2);
+                    scrollContainer.scrollLeft = btnCenter - containerCenter;
+                }
+            }, 10);
+        };
+
+        const renderHeader = () => {
+            const dayIndex = days.findIndex(d => d.id === state.activeDay);
+            const tripProgress = Math.round(((dayIndex + 1) / days.length) * 100);
+            
+            let syncIndicator = state.syncStatus === 'synced' ? '<div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black text-green-600 shadow-sm flex items-center gap-1"><i data-lucide="cloud-check" class="w-3 h-3"></i> 已同步</div>' : 
+                               state.syncStatus === 'syncing' ? '<div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black text-sky-500 shadow-sm flex items-center gap-1"><i data-lucide="cloud-cog" class="w-3 h-3 animate-spin"></i> 同步中</div>' : 
+                               '<div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black text-red-500 shadow-sm flex items-center gap-1"><i data-lucide="cloud-off" class="w-3 h-3"></i> 同步失敗</div>';
+
+            let userBadge = '';
+            if (state.currentUser && userProfiles[state.currentUser]) {
+                const p = userProfiles[state.currentUser];
+                const iconHtml = p.img ? `<img src="${p.img}" class="w-6 h-6 rounded-full object-cover bg-white shadow-sm p-[1.5px] border border-orange-100">` : `<span class="text-sm">${p.icon}</span>`;
+                userBadge = `
+                    <button onclick="window.showUserSelectModal()" class="absolute top-14 right-4 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-full text-[12px] font-black text-[#4A3B32] shadow-sm flex items-center gap-1.5 active:scale-95 transition-transform border border-white">
+                        ${iconHtml} <span class="pr-1">${p.name} ${getIsGuest() ? '(訪客)' : ''}</span>
+                    </button>
+                `;
+            }
+
+            document.getElementById('app-header').innerHTML = `
+                <div class="absolute inset-0 bg-cover bg-center opacity-90" style="background-image: url('${CUSTOM_IMAGES.banner}')"></div>
+                <div class="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-[#FFF9F2] via-[#FFF9F2]/80 to-transparent"></div>
+                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3.5 py-1.5 rounded-full text-[11px] font-black text-[#F97316] shadow-sm flex items-center gap-1.5">
+                    <i data-lucide="sun" class="w-3.5 h-3.5 text-[#F97316]"></i>${getGreeting()}
+                </div>
+                ${syncIndicator}${userBadge}
+                <div class="absolute bottom-5 left-0 w-full px-6">
+                    <h1 class="text-[28px] font-black tracking-widest text-[#4A3B32] drop-shadow-md mb-2 flex items-center gap-2">曼谷度假時光 🥥</h1>
+                    <div class="flex items-center gap-2 mb-3 flex-wrap">
+                        <span class="text-[12px] font-bold text-[#F97316] bg-white/95 shadow-md px-3.5 py-1.5 rounded-full flex items-center gap-1.5 border border-white tracking-widest"><i data-lucide="plane-takeoff" class="w-4 h-4 text-[#F97316]"></i>${getCountdown()}</span>
+                        <span class="text-[10px] font-black text-[#4A3B32] bg-white/80 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 border border-white tracking-widest">12.18 - 12.27</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="h-2 flex-1 bg-white/90 rounded-full overflow-hidden shadow-inner border border-orange-50"><div class="h-full bg-gradient-to-r from-[#FCA5A5] to-[#F97316] rounded-full transition-all duration-500 shadow-sm" style="width: ${tripProgress}%"></div></div>
+                        <span class="text-[10px] font-black text-[#4A3B32]/70 bg-white/60 px-2 py-0.5 rounded-full">DAY ${dayIndex + 1}/10</span>
+                    </div>
+                </div>
+            `;
+        };
+
+        const renderNav = () => {
+            const tabs = [
+                { id: 'prep', icon: '<i data-lucide="clipboard-list" class="w-5 h-5"></i>', label: '清單', c1: 'bg-gradient-to-br from-[#7DD3FC] to-[#0EA5E9] text-white shadow-lg border-sky-400', c2: 'bg-white text-[#0EA5E9]' }, 
+                { id: 'itinerary', icon: '<i data-lucide="map" class="w-5 h-5"></i>', label: '行程', c1: 'bg-gradient-to-br from-[#FDBA74] to-[#F97316] text-white shadow-lg border-orange-400', c2: 'bg-white text-[#F97316]' },
+                { id: 'accounting', icon: '<i data-lucide="wallet" class="w-5 h-5"></i>', label: '記帳', c1: 'bg-gradient-to-br from-[#2DD4BF] to-[#0D9488] text-white shadow-lg border-teal-400', c2: 'bg-white text-[#0D9488]' },
+                { id: 'memories', icon: '<i data-lucide="camera" class="w-5 h-5"></i>', label: '回憶', c1: 'bg-gradient-to-br from-[#F472B6] to-[#DB2777] text-white shadow-lg border-pink-400', c2: 'bg-white text-[#DB2777]' },
+                { id: 'tools', icon: '<i data-lucide="wrench" class="w-5 h-5"></i>', label: '工具', c1: 'bg-gradient-to-br from-[#FDE047] to-[#EAB308] text-white shadow-lg border-yellow-400', c2: 'bg-white text-[#EAB308]' }
+            ];
+            document.getElementById('bottom-nav').innerHTML = tabs.map(t => {
+                const isActive = state.activeTab === t.id;
+                return `
+                    <button onclick="window.switchTab('${t.id}')" class="flex-1 flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive ? 'scale-110 -translate-y-1' : 'opacity-60 hover:opacity-100'}">
+                        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-[1rem] flex items-center justify-center shadow-sm transition-all ${isActive ? t.c1 : t.c2 + ' border border-orange-50'}">${t.icon}</div>
+                        <span class="text-[9px] font-black uppercase tracking-tighter ${isActive ? t.c1.split(' ')[3] : 'text-[#4A3B32]'}">${t.label}</span>
+                    </button>
+                `;
+            }).join('');
+        };
+
+        const renderMainContent = () => {
+            const oldContainer = document.getElementById('days-scroll-container');
+            if (oldContainer && !state.needsScrollCenter) { state.lastDaysScroll = oldContainer.scrollLeft; }
+            let html = '';
+            if (state.activeTab === 'itinerary') html = generateItineraryHTML();
+            else if (state.activeTab === 'tools') html = generateToolsHTML();
+            else if (state.activeTab === 'prep') html = generatePrepHTML();
+            else if (state.activeTab === 'memories') html = generateMemoriesHTML(); 
+            else if (state.activeTab === 'accounting') html = generateAccountingHTML(); 
+            
+            const animClass = state.isTabSwitch ? 'animate-fadeIn' : '';
+            state.isTabSwitch = false; 
+            document.getElementById('main-content').innerHTML = `<div class="${animClass}">${html}</div>`;
+
+            const newContainer = document.getElementById('days-scroll-container');
+            if (newContainer && state.activeTab === 'itinerary') {
+                if (state.needsScrollCenter) {
+                    const activeBtn = document.getElementById('active-day-btn');
+                    if (activeBtn) {
+                        const containerCenter = newContainer.offsetWidth / 2;
+                        const btnCenter = activeBtn.offsetLeft + (activeBtn.offsetWidth / 2);
+                        newContainer.scrollLeft = btnCenter - containerCenter;
+                        state.lastDaysScroll = newContainer.scrollLeft;
+                        state.needsScrollCenter = false;
+                    }
+                } else if (state.lastDaysScroll !== undefined) {
+                    newContainer.scrollLeft = state.lastDaysScroll;
+                }
+            }
+        };
+
+        const generateAccountingHTML = () => {
+            const isGuest = getIsGuest();
+            const myExpenses = state.expenses.filter(e => e.owner === state.currentUser).sort((a, b) => b.id - a.id);
+            const p = userProfiles[state.currentUser || 'peilin'] || userProfiles['guest'];
+            let totalTHB_direct = 0; let totalTWD_direct = 0;
+
+            let listHtml = myExpenses.length === 0 ? 
+                `<div class="text-center py-10 text-teal-500 font-bold relative z-10"><p>目前還沒有花費喔！</p>${!isGuest?'<p class="text-xs opacity-60 mt-1">點擊上方按鈕開始記帳吧 💸</p>':''}</div>` : 
+                myExpenses.map(exp => {
+                    const amt = parseFloat(exp.amount) || 0;
+                    const isTWD = exp.currency === 'TWD';
+                    if (isTWD) totalTWD_direct += amt; else totalTHB_direct += amt;
+                    const mainText = isTWD ? `NT$ ${amt.toLocaleString()}` : `฿ ${amt.toLocaleString()}`;
+                    const subText = isTWD ? `฿ ${Math.round(amt / state.exchangeRate).toLocaleString()}` : `NT$ ${Math.round(amt * state.exchangeRate).toLocaleString()}`;
+
+                    return `
+                        <div class="flex items-center justify-between glass-card p-4 rounded-2xl mb-3 shadow-sm relative z-10 animate-fadeIn hover:scale-[1.01] transition-transform">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-teal-50/80 flex items-center justify-center text-teal-500 shadow-inner shrink-0 border border-teal-100/50"><i data-lucide="shopping-bag" class="w-5 h-5"></i></div>
+                                <div><h4 class="font-black text-[#4A3B32] text-sm">${escapeHTML(exp.description)}</h4><p class="text-[10px] font-bold text-gray-500">${exp.date}</p></div>
+                            </div>
+                            <div class="flex items-center gap-3 shrink-0">
+                                <div class="text-right">
+                                    <p class="font-black text-teal-600 text-lg">${mainText}</p>
+                                    <p class="text-[9px] font-bold text-teal-400 uppercase">${subText}</p>
+                                </div>
+                                ${!isGuest ? `<button onclick="window.deleteExpense(${exp.id})" class="w-8 h-8 rounded-full bg-red-50 text-red-400 hover:text-red-500 flex items-center justify-center transition-colors active:scale-95 border border-red-100"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            const finalTotalTWD = totalTWD_direct + Math.round(totalTHB_direct * state.exchangeRate);
+            const finalTotalTHB = totalTHB_direct + Math.round(totalTWD_direct / state.exchangeRate);
+            const headerIconHtml = p.img ? `<img src="${p.img}" class="w-6 h-6 rounded-full inline-block object-cover bg-white/90 p-[1.5px] border border-white/50 shadow-sm">` : `<span class="text-lg">${p.icon}</span>`;
+
+            return `
+                <div class="px-5 mt-4 space-y-5 relative animate-fadeIn">
+                    <div class="bg-gradient-to-br from-teal-400 to-emerald-500 rounded-[2.5rem] p-6 text-white shadow-[0_8px_20px_rgba(20,184,166,0.3)] relative overflow-hidden border border-teal-300">
+                        <div class="absolute -right-6 -top-6 text-teal-200/30"><svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="font-black text-white text-[15px] tracking-widest flex items-center gap-2">
+                                    ${headerIconHtml} <span class="drop-shadow-sm">${p.name} 的記帳本</span>
+                                </h2>
+                                <span class="bg-white/20 px-2.5 py-1 rounded-full text-[10px] font-black border border-teal-300">匯率: ${state.exchangeRate}</span>
+                            </div>
+                            <div class="flex items-end gap-2 mb-1"><span class="text-2xl font-black mb-1 drop-shadow-sm">฿</span><span class="text-5xl font-black tracking-tighter drop-shadow-sm">${finalTotalTHB.toLocaleString()}</span></div>
+                            <div class="text-teal-50 font-bold text-sm mb-2 drop-shadow-sm">總計大約 NT$ ${finalTotalTWD.toLocaleString()}</div>
+                            <div class="inline-block bg-teal-900/30 px-2 py-1 rounded text-[9px] font-bold text-teal-50">🤫 只有你看得到這裡的花費紀錄哦！</div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-[2.5rem] p-6 shadow-md relative overflow-hidden min-h-[300px]">
+                        <img src="${CUSTOM_IMAGES.watermarks.account}" class="watermark w-56 -bottom-6 -right-6">
+                        <div class="flex justify-between items-center mb-4 px-2 relative z-10">
+                            <h3 class="font-black text-[#4A3B32] text-lg">花費明細</h3>
+                            ${!isGuest ? `<button onclick="window.openExpenseModal()" class="bg-teal-500 text-white px-4 py-2 rounded-full font-black text-xs shadow-sm hover:bg-teal-600 active:scale-95 flex items-center gap-1 border border-teal-400"><i data-lucide="plus" class="w-3.5 h-3.5"></i> 記一筆</button>` : `<span class="text-xs text-gray-400 font-bold bg-gray-100 px-2 py-1 rounded-full">訪客模式</span>`}
+                        </div>
+                        <div class="space-y-0 relative z-10">${listHtml}</div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const generateMemoriesHTML = () => {
+            const isGuest = getIsGuest();
+            const isPhoto = state.activeMemoryMode === 'photo';
+            const toggleHtml = `
+                <div class="flex bg-white/80 p-1.5 rounded-full mb-6 shadow-inner border border-white max-w-[280px] mx-auto relative z-10">
+                    <button onclick="window.switchMemoryMode('photo')" class="flex-1 py-2.5 rounded-full font-black text-[13px] transition-all flex items-center justify-center gap-1.5 ${isPhoto ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-sm border border-pink-400' : 'text-gray-500 hover:text-gray-700'}">📸 拍立得</button>
+                    <button onclick="window.switchMemoryMode('diary')" class="flex-1 py-2.5 rounded-full font-black text-[13px] transition-all flex items-center justify-center gap-1.5 ${!isPhoto ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-sm border border-pink-400' : 'text-gray-500 hover:text-gray-700'}">📖 交換日記</button>
+                </div>
+            `;
+
+            if (isPhoto) {
+                let memoriesHtml = state.memories.length === 0 ? 
+                    `<div class="col-span-2 text-center py-12 flex flex-col items-center justify-center text-rose-400 relative z-10"><i data-lucide="image-plus" class="w-12 h-12 mb-3 text-rose-300"></i><p class="font-bold text-sm">還沒有照片喔！<br>${!isGuest?'快點上傳第一張合照吧！':''}</p></div>` :
+                    state.memories.map((mem, i) => {
+                        const p = userProfiles[mem.addedBy] || userProfiles['guest'];
+                        const uploaderHtml = p.img ? `<img src="${p.img}" class="w-3.5 h-3.5 rounded-full inline object-cover bg-white/90 border border-gray-200 p-[1px]">` : `<span class="text-xs">${p.icon}</span>`;
+
+                        return `
+                            <div class="polaroid-card bg-white p-2.5 pb-4 rounded-lg transform transition-transform ${i%2===0?'-rotate-2':'rotate-2'} ${i%3===0?'translate-y-2':''} hover:scale-105 relative group z-10 animate-fadeIn" style="animation-delay: ${i*0.05}s">
+                                <div class="aspect-square bg-gray-100 rounded-md mb-3 overflow-hidden relative">
+                                    <img src="${mem.image}" onclick="window.openImageViewer('${mem.image}')" class="w-full h-full object-cover cursor-pointer" />
+                                    ${!isGuest ? `<button onclick="window.deleteMemory(${mem.id})" class="absolute top-1.5 right-1.5 bg-black/60 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 active:scale-95"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                                </div>
+                                <p class="text-[#4A3B32] font-black text-[13px] text-center line-clamp-2 leading-tight">${escapeHTML(mem.caption)}</p>
+                                <div class="flex justify-between items-center mt-2 px-1">
+                                    <p class="text-gray-400 text-[9px] font-bold uppercase tracking-wider">${mem.date}</p>
+                                    <p class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-200 flex items-center gap-1 shadow-sm">${uploaderHtml} ${p.name}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                return `
+                    <div class="px-5 mt-4 animate-fadeIn">
+                        ${toggleHtml}
+                        <div class="glass-card rounded-[2.5rem] p-6 shadow-md relative overflow-hidden min-h-[400px]">
+                            <div class="flex justify-between items-center mb-6 relative z-10">
+                                <h2 class="font-black text-xl text-rose-500 flex items-center gap-2"><i data-lucide="camera" class="w-6 h-6"></i> 雲端拍立得</h2>
+                                ${!isGuest ? `<button onclick="window.triggerPhotoUpload()" class="bg-gradient-to-r from-rose-400 to-pink-500 text-white px-4 py-2 rounded-full font-black text-sm shadow-sm active:scale-95 flex items-center gap-1.5 border border-rose-400"><i data-lucide="plus" class="w-4 h-4"></i> 新增</button>
+                                <input type="file" id="photo-upload" accept="image/*" class="hidden" onchange="window.handlePhotoUpload(event)">` : ''}
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 pb-4 relative z-10">${memoriesHtml}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const diaries = [...state.diaries].sort((a, b) => b.id - a.id);
+                let diaryListHtml = diaries.length === 0 ? 
+                    `<div class="text-center py-8 text-rose-400 font-bold text-sm relative z-10">還沒有人寫日記喔！${!isGuest?'快來分享今天的心情吧！':''}</div>` :
+                    diaries.map(d => {
+                        const p = userProfiles[d.owner] || userProfiles['guest'];
+                        const avatarHtml = p.img ? `<img src="${p.img}" class="w-10 h-10 rounded-full object-cover bg-white p-[1.5px] border border-white shadow-sm">` : `<div class="w-10 h-10 rounded-full ${p.color} flex items-center justify-center text-lg shadow-inner border border-white">${p.icon}</div>`;
+                        
+                        return `
+                            <div class="bg-white/80 border border-rose-100 shadow-sm rounded-[1.5rem] p-4 mb-4 relative group z-10 animate-fadeIn">
+                                <div class="flex gap-3 items-start relative z-10">
+                                    <div class="shrink-0 relative">
+                                        ${avatarHtml}
+                                        <span class="absolute -bottom-1 -right-1 text-base drop-shadow-sm bg-white rounded-full leading-none border border-white/50">${d.mood}</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex justify-between items-center mb-1.5">
+                                            <span class="font-black text-[#4A3B32] text-[13px]">${p.name}</span>
+                                            <span class="text-[9px] text-rose-400 font-bold tracking-wider">${d.date}</span>
+                                        </div>
+                                        <p class="text-[13px] text-[#4A3B32]/90 leading-relaxed font-bold break-words">${escapeHTML(d.text)}</p>
+                                    </div>
+                                </div>
+                                ${(!isGuest && d.owner === state.currentUser) ? `<button onclick="window.deleteDiary(${d.id})" class="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-50 text-red-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-red-200 z-20 shadow-sm"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+
+                const moods = ['🥰', '🤤', '🤣', '🥵', '🇹🇭'];
+                return `
+                    <div class="px-5 mt-4 animate-fadeIn">
+                        ${toggleHtml}
+                        <div class="glass-card rounded-[2.5rem] p-6 shadow-md relative overflow-hidden min-h-[400px]">
+                            <div class="relative z-10 mb-6">
+                                <h2 class="font-black text-xl text-rose-500 flex items-center gap-2 mb-4"><i data-lucide="book-heart" class="w-6 h-6"></i> 交換日記</h2>
+                                ${!isGuest ? `
+                                <div class="bg-white/90 border border-rose-100 rounded-[1.5rem] p-4 shadow-sm relative z-10 mb-4">
+                                    <div class="flex justify-between mb-4 px-1">${moods.map(m => `<button onclick="window.setDiaryMood('${m}')" class="w-10 h-10 rounded-full text-2xl flex items-center justify-center transition-all ${state.diaryMood === m ? 'bg-white shadow-md scale-110 border-2 border-rose-300 z-10' : 'bg-white/50 grayscale opacity-60 border border-white/50'}">${m}</button>`).join('')}</div>
+                                    <div class="flex items-end gap-2">
+                                        <textarea id="new-diary-input" rows="2" placeholder="今天天氣好熱...但泰奶好好喝！" class="flex-1 bg-white border border-rose-50 shadow-inner rounded-xl px-3 py-2.5 text-sm font-bold text-[#4A3B32] focus:ring-2 focus:ring-rose-300 outline-none resize-none transition-colors"></textarea>
+                                        <button onclick="window.addDiary()" class="w-10 h-10 shrink-0 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-xl shadow-sm active:scale-95 flex items-center justify-center border border-rose-400"><i data-lucide="send" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>` : ''}
+                            </div>
+                            <div class="space-y-0 relative z-10 pt-2">${diaryListHtml}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        const generateItineraryHTML = () => {
+            const isGuest = getIsGuest();
+            const currentItinerary = state.itinerary[state.activeDay] || [];
+            
+            let daysHtml = days.map((day, i) => `
+                <button ${state.activeDay === day.id ? 'id="active-day-btn"' : ''} onclick="window.switchDay('${day.id}')" class="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shadow-sm border border-white ${state.activeDay === day.id ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white scale-105' : 'bg-white/80 text-[#4A3B32]/60 hover:bg-white'}">
+                    <img src="${day.icon}" class="w-6 h-6 object-contain ${state.activeDay !== day.id ? 'grayscale opacity-60' : ''}" />
+                    <div class="flex flex-col items-start">
+                        <span class="text-[10px] font-bold tracking-widest uppercase ${state.activeDay === day.id ? 'text-white/90' : 'text-[#4A3B32]/40'}">DAY ${i + 1}</span>
+                        <span class="text-[13px] font-black leading-none mt-0.5">${day.date}</span>
+                    </div>
+                </button>
+            `).join('');
+
+            const w = window.weatherCache[state.activeDay];
+            let weatherHtml = (!w || w.loading) ? `<div class="flex items-center gap-1.5 mt-1"><i data-lucide="loader-2" class="w-4 h-4 animate-spin text-orange-500"></i><span class="font-black text-gray-400 text-sm">抓取中...</span></div>` : 
+                              (w.error) ? `<div class="flex items-center gap-1.5 mt-1 text-gray-400"><span class="font-black text-sm">無法取得天氣</span></div>` : 
+                              `<div class="flex items-center gap-1.5 mt-0.5"><div class="text-[22px] drop-shadow-sm flex items-center">${w.icon}</div><span class="font-black text-[#4A3B32] text-[15px]">${w.min}°-${w.max}°C</span></div>`;
+            if (!w) setTimeout(() => window.fetchWeather(state.activeDay), 0);
+            
+            // 每個 Day 不同的浮水印
+            const currentDayIndex = parseInt(state.activeDay.replace('day', '')) - 1;
+            const currentWatermark = dayIcons[currentDayIndex % dayIcons.length];
+
+            let listHtml = currentItinerary.length === 0 ? `<div class="text-center py-10 text-orange-400 font-bold relative z-10"><p>這天還沒有行程喔！</p>${!isGuest?'<p class="text-sm opacity-60 mt-1">點擊下方按鈕加入新行程吧！</p>':''}</div>` :
+                currentItinerary.map((item, idx) => {
+                    let theme = { node: 'bg-sky-400 border-sky-100', pill: 'from-sky-400 to-blue-500', text: 'text-sky-700', icon: '<i data-lucide="plane" class="w-3.5 h-3.5"></i>', label: '航班資訊' };
+                    if (item.type === 'spot') theme = { node: 'bg-orange-400 border-orange-100', pill: 'from-orange-400 to-red-400', text: 'text-orange-700', icon: '<i data-lucide="map-pin" class="w-3.5 h-3.5"></i>', label: '景點行程' };
+                    else if (item.type === 'hotel') theme = { node: 'bg-yellow-400 border-yellow-100', pill: 'from-yellow-400 to-amber-500', text: 'text-amber-700', icon: '<i data-lucide="bed" class="w-3.5 h-3.5"></i>', label: '住宿地點' };
+                    else if (item.type === 'food') theme = { node: 'bg-teal-400 border-teal-100', pill: 'from-teal-400 to-emerald-500', text: 'text-teal-700', icon: CustomIcons.Utensils, label: '美食推薦' };
+                    else if (item.type === 'transport') theme = { node: 'bg-gray-400 border-gray-100', pill: 'from-gray-400 to-slate-500', text: 'text-gray-700', icon: '<i data-lucide="car" class="w-3.5 h-3.5"></i>', label: '交通接駁' };
+
+                    const p = userProfiles[item.addedBy] || userProfiles['peilin'];
+                    const aiContent = getAIGuide(item.location, item.notes);
+
+                    return `
+                        <div class="relative z-10 mb-8 last:mb-0 group animate-fadeIn" style="animation-delay: ${idx*0.05}s">
+                            <div class="absolute -left-10 top-5 w-4 h-4 rounded-full border-[3px] shadow-sm z-20 ${theme.node} border-white ring-4 ring-white/50 group-hover:scale-110 transition-transform"></div>
+                            <div class="glass-card rounded-[2rem] p-5 shadow-sm relative overflow-hidden transition-all duration-300 border-orange-100/50 hover:shadow-md">
+                                <img src="${currentWatermark}" class="watermark w-40 -bottom-4 -right-4 -rotate-12" />
+                                <div class="flex justify-between items-center mb-4 relative z-10">
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white bg-gradient-to-r ${theme.pill} shadow-sm border border-white/50">
+                                        ${theme.icon}<span class="text-[11px] font-black tracking-widest">${theme.label} · ${escapeHTML(item.time)}</span>
+                                    </div>
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-white/90 ${p.color} border ${p.border} ml-2 shadow-sm flex items-center gap-1.5"><img src="${p.img}" class="w-4 h-4 rounded-full object-cover bg-white border border-white/50 p-[1px]"> ${p.name}</span>
+                                </div>
+                                <h3 class="text-[22px] font-black leading-tight mb-4 ${theme.text} relative z-10 tracking-wide">${escapeHTML(item.location)}</h3>
+                                <div class="bg-white/90 border border-orange-50 rounded-[1.5rem] p-4 mb-4 shadow-sm relative z-10">
+                                    ${item.detail ? `<div class="flex items-center gap-2.5 text-orange-600 font-black text-sm mb-3"><i data-lucide="ticket" class="w-4 h-4 text-orange-400"></i>${escapeHTML(item.detail)}</div>` : ''}
+                                    <div class="flex items-start gap-2.5 text-[#4A3B32]/80 text-[13px] font-bold leading-relaxed whitespace-pre-line"><i data-lucide="pencil-line" class="w-4 h-4 text-orange-300 shrink-0 mt-0.5"></i><span>${escapeHTML(item.notes)}</span></div>
+                                    
+                                    ${item.image ? `
+                                        <div class="mt-4 rounded-xl overflow-hidden shadow-sm relative group/img border border-white">
+                                            <img src="${item.image}" onclick="window.openImageViewer('${item.image}')" class="w-full object-cover max-h-[200px] cursor-pointer" />
+                                            ${!isGuest ? `<button onclick="window.deleteItineraryPhoto('${state.activeDay}', ${idx})" class="absolute top-2 right-2 bg-black/60 text-white p-2 rounded-full opacity-0 group-hover/img:opacity-100 active:scale-95 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                                        </div>
+                                    ` : ''}
+                                </div>
+
+                                <div class="flex justify-between items-center mt-2 relative z-10">
+                                    <div class="flex gap-2 flex-wrap">
+                                        ${item.type !== 'transport' && item.type !== 'flight' ? `<button id="ai-btn-${idx}" onclick="window.toggleAI(${idx})" class="flex items-center gap-1.5 px-3.5 py-2 rounded-full font-black active:scale-95 border shadow-sm border-white bg-white text-orange-500 transition-colors hover:bg-orange-50"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i><span class="text-[11px] tracking-widest">AI 導覽</span></button>` : ''}
+                                        <button onclick="window.openGoogleMaps('${state.activeDay}', ${idx})" class="flex items-center gap-1.5 px-3.5 py-2 rounded-full font-black border border-white shadow-sm bg-white text-sky-500 active:scale-95 hover:bg-sky-50"><i data-lucide="navigation" class="w-3.5 h-3.5"></i><span class="text-[11px] tracking-widest">定位</span></button>
+                                        ${!isGuest && !item.image ? `<button onclick="window.triggerItineraryPhoto('${state.activeDay}', ${idx})" class="flex items-center gap-1.5 px-3.5 py-2 rounded-full font-black border border-white shadow-sm bg-white text-emerald-500 active:scale-95 hover:bg-emerald-50"><i data-lucide="camera" class="w-3.5 h-3.5"></i><span class="text-[11px] tracking-widest">照片</span></button>` : ''}
+                                    </div>
+                                    <div class="flex gap-1.5 shrink-0">
+                                        ${!isGuest ? `
+                                            <button onclick="window.openEditModal('${state.activeDay}', ${idx})" class="w-8 h-8 rounded-xl bg-white text-gray-500 border border-white shadow-sm active:scale-95 flex items-center justify-center hover:bg-gray-50"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                                            <button onclick="window.confirmDelete('${state.activeDay}', ${idx})" class="w-8 h-8 rounded-xl bg-white text-gray-400 hover:text-red-500 border border-white shadow-sm active:scale-95 flex items-center justify-center hover:bg-red-50"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                
+                                ${item.type !== 'transport' && item.type !== 'flight' ? `
+                                <div id="ai-box-${idx}" class="hidden mt-4 pt-4 border-t-2 border-dashed border-orange-100 relative z-10 overflow-hidden transition-all duration-300">
+                                    <div class="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 p-4 rounded-2xl relative shadow-sm">
+                                        <div class="absolute -top-3 left-4 bg-white text-orange-500 text-[10px] font-black px-3 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-orange-100"><i data-lucide="bot" class="w-3 h-3"></i> 小象導遊</div>
+                                        <p class="text-[13px] font-bold text-orange-700 leading-relaxed mt-2">${aiContent}</p>
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('') + `
+                    <button onclick="window.copyTodayItinerary()" class="w-full mt-2 flex items-center justify-center gap-2 py-4 bg-green-50 text-green-600 border border-green-200 rounded-[1.5rem] font-black active:scale-95 shadow-sm relative z-10"><i data-lucide="${state.copyItinerarySuccess ? 'check-circle' : 'message-circle'}" class="w-5 h-5"></i> ${state.copyItinerarySuccess ? '已複製！快貼到 LINE' : '複製今日行程'}</button>
+                `;
+
+            return `
+                <div class="sticky top-0 z-40 bg-[#FFF9F2]/90 backdrop-blur-md pt-4 pb-3 px-5 border-b border-orange-100 shadow-sm animate-fadeIn">
+                    <div id="days-scroll-container" class="flex overflow-x-auto gap-3 no-scrollbar pb-1">${daysHtml}</div>
+                </div>
+                <div class="px-5 mt-4 space-y-5">
+                    <div class="flex gap-3 mb-6 animate-fadeIn">
+                        <button onclick="window.openGoogleMapsRoute()" class="flex-1 bg-white border border-white rounded-[1.5rem] p-3 flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform">
+                            <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shadow-inner"><i data-lucide="map" class="w-4 h-4 text-orange-500"></i></div>
+                            <span class="font-black text-orange-600 tracking-wider text-sm">開啟整日路線</span>
+                        </button>
+                        <div class="shrink-0 glass-card rounded-[1.5rem] px-4 py-3 flex flex-col items-center justify-center shadow-sm min-w-[100px]">
+                            <div class="text-[9px] font-black text-[#4A3B32]/60 flex items-center gap-1"><i data-lucide="sparkles" class="w-2.5 h-2.5 text-yellow-500"></i> ${w&&w.isFallback?`${w.locName}即時`:`${w?w.locName:''}預報`}</div>
+                            ${weatherHtml}
+                        </div>
+                    </div>
+                    <div class="relative pl-10 pb-8 mt-4">
+                        <div class="absolute top-4 bottom-8 left-[17px] w-0 border-l-[3px] border-dotted border-orange-200 z-0"></div>
+                        ${listHtml}
+                        ${!isGuest ? `<button onclick="window.openAddModal()" class="w-full mt-4 flex items-center justify-center gap-2 py-4 border-[3px] border-dashed border-orange-200 rounded-[2rem] text-orange-500 font-black hover:bg-orange-50 active:scale-95 shadow-sm bg-white/80 relative z-10 animate-fadeIn"><i data-lucide="plus" class="w-5 h-5"></i> 新增曼谷行程</button>` : ''}
+                    </div>
+                </div>
+            `;
+        };
+
+        const generateToolsHTML = () => {
+            const isGuest = getIsGuest();
+            const twdResult = Math.round(state.jpyInput * state.exchangeRate).toLocaleString();
+            let rateInputHtml = state.isEditingRate && !isGuest ? 
+                `<input type="number" step="0.001" value="${state.exchangeRate}" onchange="window.updateRateValue(this.value)" onblur="window.toggleRateEdit(false)" autofocus class="w-20 bg-white border border-orange-200 rounded px-2 py-0.5 text-base font-black text-orange-500 text-center outline-none shadow-inner" />` : 
+                `<button ${!isGuest ? 'onclick="window.toggleRateEdit(true)"' : 'disabled'} class="flex items-center gap-1 text-xs font-black text-orange-500 bg-white/80 px-3 py-1 rounded-full border border-white shadow-sm ${!isGuest?'hover:bg-white':''}">${state.exchangeRate} ${!isGuest?'<i data-lucide="edit" class="w-3 h-3"></i>':''}</button>`;
+
+            return `
+                <div class="px-5 mt-4 space-y-6 animate-fadeIn">
+                    <div class="glass-card rounded-[2.5rem] p-8 text-center shadow-md relative overflow-hidden">
+                        <img src="${CUSTOM_IMAGES.watermarks.tool}" class="watermark w-56 -bottom-2 -right-2" />
+                        <div class="relative z-10">
+                            <div class="w-32 h-32 mx-auto mb-4"><img src="${CUSTOM_IMAGES.exchangeIcon}" class="w-full h-full object-contain drop-shadow-lg" /></div>
+                            <h3 class="font-black text-xl mb-6 text-[#4A3B32] flex items-center justify-center gap-2"><img src="${CUSTOM_IMAGES.moneyGoneIcon}" class="h-8 w-auto drop-shadow-sm" /> 泰銖換算</h3>
+                            <div class="flex justify-center items-center gap-2 mb-6"><span class="text-[10px] font-bold text-[#4A3B32]/70">目前匯率：</span>${rateInputHtml}</div>
+                            <div class="flex justify-center gap-2 mb-4">
+                                ${[100, 500, 1000].map(amt => `<button onclick="window.updateJpy(${amt})" class="bg-white/80 border border-white shadow-sm text-[#4A3B32] text-[11px] font-black py-2 px-4 rounded-full active:scale-95">฿${amt.toLocaleString()}</button>`).join('')}
+                            </div>
+                            <div class="space-y-4">
+                                <div class="relative">
+                                    <span class="absolute left-5 top-1/2 -translate-y-1/2 font-black text-[#4A3B32]/50 text-lg">THB ฿</span>
+                                    <input type="number" id="jpy-input" value="${state.jpyInput}" oninput="window.handleJpyInput(this.value)" class="w-full bg-white/80 border border-white rounded-[1.8rem] py-4 pl-24 pr-6 text-xl font-black outline-none focus:border-orange-300 text-right text-[#4A3B32] shadow-inner" />
+                                </div>
+                                <div class="py-2 flex justify-center text-3xl text-orange-300">⬇</div>
+                                <div class="bg-gradient-to-br from-orange-50 to-white/90 border border-white p-6 rounded-[2rem] shadow-sm relative">
+                                    <div class="text-[10px] font-black text-orange-600/70 uppercase tracking-[0.2em] mb-1">大約等於</div>
+                                    <span class="text-3xl font-black tracking-tighter text-[#4A3B32]" id="twd-result-text">NT$ ${twdResult}</span>
+                                    <button onclick="window.copyToClipboard()" class="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black border border-white shadow-sm ${state.copied ? 'bg-green-100/90 text-green-600 border-green-200' : 'bg-white/90 text-[#4A3B32]/60 hover:bg-white'}">
+                                        ${state.copied ? '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> 已複製' : CustomIcons.Copy + ' 複製'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-[2.5rem] p-8 text-center shadow-md relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h3 class="font-black text-xl mb-3 text-[#4A3B32] flex items-center justify-center gap-2"><i data-lucide="utensils" class="w-6 h-6 text-orange-500"></i>晚餐吃什麼轉盤</h3>
+                            <p class="text-xs font-bold text-[#4A3B32]/60 mb-6">交給命運來決定下一餐吧！</p>
+                            <div class="bg-white/80 border border-orange-100 rounded-[1.5rem] p-6 mb-6 h-[100px] flex items-center justify-center shadow-inner">
+                                <span class="text-2xl font-black text-orange-600 ${state.gachaAnimating ? 'animate-pulse' : ''}">${state.gachaResult || '❓ 點擊開始轉盤 ❓'}</span>
+                            </div>
+                            <button onclick="window.playGacha()" class="w-full bg-gradient-to-r from-orange-400 to-red-400 text-white font-black text-lg py-4 rounded-[1.5rem] shadow-md active:scale-95 flex items-center justify-center gap-2 border border-orange-400">
+                                ${state.gachaAnimating ? '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> 旋轉中...' : '🎲 轉盤啟動！'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-[2.5rem] p-8 text-center shadow-md relative overflow-hidden mt-6">
+                        <div class="relative z-10">
+                            <h3 class="font-black text-xl mb-3 text-[#4A3B32] flex items-center justify-center gap-2"><i data-lucide="book-open" class="w-6 h-6 text-sky-500"></i>旅遊小書匯出</h3>
+                            <p class="text-xs font-bold text-[#4A3B32]/60 mb-6">把我們的行程、照片和日記打包成 PDF 預覽留念！</p>
+                            <button onclick="window.openBookletPreview()" class="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white font-black text-lg py-4 rounded-[1.5rem] shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border border-sky-400">
+                                <i data-lucide="printer" class="w-5 h-5"></i> 預覽與匯出小書
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const generatePrepHTML = () => {
+            const isGuest = getIsGuest();
+            const isChecklist = state.activeListMode === 'checklist';
+            const isShopping = state.activeListMode === 'shopping';
+            const isWishlist = state.activeListMode === 'wishlist';
+
+            const toggleHtml = `
+                <div class="flex bg-white/80 p-1.5 rounded-full mb-6 shadow-inner border border-white max-w-[320px] mx-auto relative z-10">
+                    <button onclick="window.switchListMode('checklist')" class="flex-1 py-2.5 rounded-full font-black text-[12px] transition-all flex items-center justify-center gap-1 ${isChecklist ? 'bg-white text-sky-500 shadow-sm' : 'text-gray-500 hover:text-gray-700'}"><i data-lucide="backpack" class="w-3.5 h-3.5"></i> 行李</button>
+                    <button onclick="window.switchListMode('shopping')" class="flex-1 py-2.5 rounded-full font-black text-[12px] transition-all flex items-center justify-center gap-1 ${isShopping ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}">${CustomIcons.Bag} 購物車</button>
+                    <button onclick="window.switchListMode('wishlist')" class="flex-1 py-2.5 rounded-full font-black text-[12px] transition-all flex items-center justify-center gap-1 ${isWishlist ? 'bg-gradient-to-r from-teal-400 to-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> 許願</button>
+                </div>
+            `;
+
+            if (isChecklist) {
+                const filteredChecklist = state.checklist.filter(item => (item.assignee || 'all') === state.activeChecklistTab);
+                const completed = filteredChecklist.filter(i => i.checked).length;
+                const progress = filteredChecklist.length === 0 ? 0 : Math.round((completed / filteredChecklist.length) * 100);
+
+                let tabsHtml = ['all', 'peilin', 'mom', 'chihjung', 'chunyen'].map(id => {
+                    const isActive = state.activeChecklistTab === id;
+                    const p = userProfiles[id];
+                    const iconHtml = p.img ? `<img src="${p.img}" class="w-3.5 h-3.5 rounded-full object-cover bg-white/90 border border-white shadow-sm p-[1px]">` : `<span class="text-xs">${p.icon}</span>`;
+                    return `<button onclick="window.switchChecklistTab('${id}')" class="flex items-center gap-1.5 px-4 py-2 rounded-full font-black text-[11px] whitespace-nowrap transition-all shadow-sm ${isActive ? `${p.color} border border-white scale-105` : 'bg-white/80 text-gray-500 border border-transparent'}">${iconHtml} ${p.name}</button>`;
+                }).join('');
+
+                let listHtml = filteredChecklist.length === 0 ? `<div class="text-center py-8 text-gray-400 font-bold text-sm relative z-10">這個分類還沒有提醒項目喔！</div>` : 
+                    filteredChecklist.map(item => `
+                        <div class="flex items-stretch gap-2 mb-3 last:mb-0 animate-fadeIn relative z-10">
+                            <label class="flex-1 flex items-center gap-4 p-4 rounded-[1.5rem] border border-white transition-all ${!isGuest?'cursor-pointer':''} shadow-sm ${item.checked ? 'bg-white/50 opacity-70' : 'bg-white/80'}">
+                                <div class="relative shrink-0"><input type="checkbox" class="hidden" ${item.checked ? 'checked' : ''} ${!isGuest?`onchange="window.toggleCheck(${item.id})"`:'disabled'} />${item.checked ? '<i data-lucide="check-circle" class="w-6 h-6 text-sky-500"></i>' : '<i data-lucide="circle" class="w-6 h-6 text-sky-200"></i>'}</div>
+                                <span class="font-bold text-sm ${item.checked ? 'text-[#4A3B32]/50 line-through' : 'text-[#4A3B32]'}">${escapeHTML(item.text)}</span>
+                            </label>
+                            
+                            ${(!isGuest && (item.assignee === state.currentUser || item.assignee === 'all' || state.currentUser === 'peilin')) ? `
+                            <div class="flex flex-col gap-1 shrink-0">
+                                <button onclick="window.editChecklistItem(${item.id})" class="w-10 h-7 flex items-center justify-center rounded-xl bg-white/80 text-sky-500 hover:text-blue-500 shadow-sm transition-colors border border-white active:scale-95"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                                <button onclick="window.deleteChecklistItem(${item.id})" class="w-10 h-7 flex items-center justify-center rounded-xl bg-white/80 text-red-300 hover:text-red-500 shadow-sm transition-colors border border-white active:scale-95"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                            </div>` : ''}
+                        </div>
+                    `).join('');
+
+                return `
+                    <div class="px-5 mt-4 animate-fadeIn">
+                        ${toggleHtml}
+                        <div class="glass-card rounded-[2.5rem] p-6 shadow-md animate-fadeIn relative overflow-hidden min-h-[300px]">
+                            <img src="${CUSTOM_IMAGES.watermarks.prep}" class="watermark w-56 -bottom-6 -right-6" />
+                            
+                            <div class="flex justify-between items-center mb-4 relative z-10">
+                                <h2 class="font-black text-xl text-sky-500 flex items-center gap-2">行李清單</h2>
+                                <span class="text-[11px] font-black text-sky-600 bg-sky-50 px-3 py-1 rounded-full shadow-sm border border-sky-100">${progress}%</span>
+                            </div>
+                            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4 -mx-2 px-2 relative z-10">${tabsHtml}</div>
+                            <div class="h-2 w-full bg-sky-50 rounded-full overflow-hidden mb-6 shadow-inner relative z-10"><div class="h-full bg-sky-500 rounded-full transition-all duration-500" style="width: ${progress}%"></div></div>
+                            <div class="space-y-0 min-h-[100px] relative z-10">${listHtml}</div>
+                            ${!isGuest ? `
+                            <div class="flex items-center gap-2 mt-6 pt-4 border-t-2 border-dashed border-sky-100 relative z-10">
+                                <input type="text" id="new-checklist-item" placeholder="新增 ${userProfiles[state.activeChecklistTab].name} 的行李..." onkeydown="if(event.key === 'Enter') window.addChecklistItem()" class="flex-1 bg-white border border-white shadow-sm rounded-[1.5rem] px-4 py-4 text-sm font-bold text-[#4A3B32] focus:ring-2 focus:ring-sky-300 focus:bg-white outline-none transition-colors" />
+                                <button onclick="window.addChecklistItem()" class="w-14 h-14 shrink-0 flex items-center justify-center bg-sky-500 text-white rounded-[1.5rem] shadow-sm active:scale-95 border border-sky-400"><i data-lucide="plus" class="w-6 h-6"></i></button>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `;
+            } else if (isShopping) {
+                const list = state.shoppingList || [];
+                const completed = list.filter(i => i.checked).length;
+                const progress = list.length === 0 ? 0 : Math.round((completed / list.length) * 100);
+
+                let listHtml = list.length === 0 ? `<div class="text-center py-10 text-orange-400 font-bold text-sm relative z-10 flex flex-col items-center"><div class="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center mb-3 border border-orange-100">${CustomIcons.Bag}</div>還沒有把東西放進購物車喔！</div>` : 
+                    list.map(item => {
+                        const twdPrice = item.price ? Math.round(parseFloat(item.price) * state.exchangeRate) : null;
+                        const priceHtml = item.price ? `<div class="mt-1 flex items-center gap-1.5"><span class="text-[#4A3B32] font-black text-sm tracking-wider">฿${parseFloat(item.price).toLocaleString()}</span><span class="text-[10px] text-gray-400 font-bold">(約 NT$${twdPrice.toLocaleString()})</span></div>` : '';
+                        
+                        return `
+                            <div class="flex items-stretch gap-2 mb-3 last:mb-0 animate-fadeIn relative z-10">
+                                <div class="flex-1 flex items-center gap-3 p-3 rounded-[1.5rem] border border-white transition-all shadow-sm ${item.checked ? 'bg-white/50 opacity-60 grayscale' : 'bg-white/80'}">
+                                    <button ${!isGuest ? `onclick="window.toggleShoppingItem(${item.id})"` : 'disabled'} class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full border-2 transition-colors ${item.checked ? 'bg-orange-500 border-orange-500 text-white' : 'border-orange-200 bg-white/50 text-transparent'}"><i data-lucide="check" class="w-4 h-4"></i></button>
+                                    
+                                    <div class="w-[70px] h-[70px] shrink-0 bg-gray-50 rounded-xl border border-gray-100 overflow-hidden flex items-center justify-center shadow-inner relative group">
+                                        ${item.image ? `<img src="${item.image}" onclick="window.openImageViewer('${item.image}')" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity">` : `<i data-lucide="image" class="w-6 h-6 text-gray-300"></i>`}
+                                    </div>
+                                    
+                                    <div class="flex-1 min-w-0 pr-2">
+                                        <span class="font-black text-[15px] block truncate text-[#4A3B32] ${item.checked ? 'line-through' : ''}">${escapeHTML(item.name)}</span>
+                                        ${priceHtml}
+                                    </div>
+                                </div>
+                                ${!isGuest ? `
+                                <div class="flex flex-col gap-1 shrink-0">
+                                    <button onclick="window.editShoppingItem(${item.id})" class="w-10 h-[38px] flex items-center justify-center rounded-xl bg-white/80 text-orange-500 hover:text-orange-600 shadow-sm transition-colors border border-white active:scale-95"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                    <button onclick="window.deleteShoppingItem(${item.id})" class="w-10 h-[38px] flex items-center justify-center rounded-xl bg-white/80 text-red-300 hover:text-red-500 shadow-sm transition-colors border border-white active:scale-95"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+
+                return `
+                    <div class="px-5 mt-4 animate-fadeIn">
+                        ${toggleHtml}
+                        <div class="glass-card rounded-[2.5rem] p-6 shadow-md relative overflow-hidden min-h-[300px]">
+                            
+                            <div class="absolute -right-10 -top-10 w-32 h-32 bg-orange-300/20 rounded-full blur-2xl z-0 pointer-events-none"></div>
+
+                            <div class="flex justify-between items-center mb-6 relative z-10">
+                                <h2 class="font-black text-xl text-orange-500 flex items-center gap-2">${CustomIcons.Bag} 購物清單</h2>
+                                <span class="text-[11px] font-black text-orange-600 bg-orange-50 px-3 py-1 rounded-full shadow-sm border border-orange-100">已買 ${completed}/${list.length}</span>
+                            </div>
+                            
+                            <div class="h-2 w-full bg-orange-50 rounded-full overflow-hidden mb-6 shadow-inner relative z-10"><div class="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500" style="width: ${progress}%"></div></div>
+                            <div class="space-y-0 min-h-[100px] relative z-10">${listHtml}</div>
+                            
+                            ${!isGuest ? `
+                            <button onclick="window.openShoppingModal()" class="w-full mt-6 py-4 rounded-[1.5rem] border-[3px] border-dashed border-orange-200 text-orange-500 font-black hover:bg-orange-50 transition-colors active:scale-95 shadow-sm bg-white/80 flex items-center justify-center gap-2 relative z-10">
+                                <i data-lucide="plus" class="w-5 h-5"></i> 把想買的加進來！
+                            </button>` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                const wishes = state.wishes || [];
+                const completed = wishes.filter(i => i.checked).length;
+                const progress = wishes.length === 0 ? 0 : Math.round((completed / wishes.length) * 100);
+
+                let listHtml = wishes.length === 0 ? `<div class="text-center py-8 text-teal-500 font-bold text-sm relative z-10">還沒有人許願喔！${!isGuest?'快把想去的、想吃的加進來！':''}</div>` : 
+                    wishes.map(item => {
+                        const p = userProfiles[item.addedBy] || userProfiles['guest'];
+                        let typeIcon = item.type === 'food' ? '🥭' : item.type === 'spot' ? '🏖️' : '🛍️';
+                        const avatarHtml = p.img ? `<img src="${p.img}" class="w-4 h-4 rounded-full inline object-cover bg-white border border-white shadow-sm p-[1px]">` : `<span class="text-xs">${p.icon}</span>`;
+                        return `
+                            <div class="flex items-stretch gap-2 mb-3 last:mb-0 animate-fadeIn relative z-10">
+                                <div class="flex-1 flex items-center gap-3 p-4 rounded-[1.5rem] border border-white transition-all shadow-sm ${item.checked ? 'bg-white/50 opacity-70' : 'bg-white/90'}">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0 ${item.checked ? 'bg-gray-100 grayscale' : 'bg-teal-50/90 shadow-inner border border-teal-100'}">${typeIcon}</div>
+                                    <div class="flex-1">
+                                        <span class="font-black text-sm block ${item.checked ? 'text-[#4A3B32]/50 line-through' : 'text-[#4A3B32]'}">${escapeHTML(item.text)}</span>
+                                        <span class="text-[10px] font-bold text-gray-500 mt-0.5 flex items-center gap-1.5">${avatarHtml} ${p.name}</span>
+                                    </div>
+                                    ${!isGuest ? `<button onclick="window.toggleWish(${item.id})" class="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black transition-all active:scale-95 border shadow-sm ${item.checked ? 'bg-gray-100 text-gray-400 border-gray-200/50' : 'bg-teal-100 text-teal-700 border-teal-200'}">${item.checked ? '已達成' : '實現它！'}</button>` : (item.checked ? `<span class="text-[10px] font-black text-gray-400">已達成</span>` : '')}
+                                </div>
+                                ${(!isGuest && (item.addedBy === state.currentUser || state.currentUser === 'peilin')) ? `
+                                <div class="flex flex-col gap-1 shrink-0">
+                                    <button onclick="window.editWish(${item.id})" class="w-10 h-[38px] flex items-center justify-center rounded-xl bg-white text-teal-500 hover:text-teal-600 shadow-sm transition-colors border border-white active:scale-95"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                    <button onclick="window.deleteWish(${item.id})" class="w-10 h-[38px] flex items-center justify-center rounded-xl bg-white text-red-300 hover:text-red-500 shadow-sm transition-colors border border-white active:scale-95"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+
+                return `
+                    <div class="px-5 mt-4 animate-fadeIn">
+                        ${toggleHtml}
+                        <div class="glass-card rounded-[2.5rem] p-6 shadow-md animate-fadeIn relative overflow-hidden min-h-[300px]">
+                            <img src="${CUSTOM_IMAGES.watermarks.wish}" class="watermark w-56 -bottom-6 -right-6" />
+                            <div class="absolute -right-10 -top-10 w-32 h-32 bg-teal-300/20 rounded-full blur-2xl z-0 pointer-events-none"></div>
+
+                            <div class="flex justify-between items-center mb-6 relative z-10">
+                                <h2 class="font-black text-xl text-teal-600 flex items-center gap-2">✨ 許願池</h2>
+                                <span class="text-[11px] font-black text-teal-600 bg-teal-50 px-3 py-1 rounded-full shadow-sm border border-teal-100">達成率 ${progress}%</span>
+                            </div>
+                            <div class="h-2 w-full bg-teal-50 rounded-full overflow-hidden mb-6 shadow-inner relative z-10"><div class="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full transition-all duration-500" style="width: ${progress}%"></div></div>
+                            <div class="space-y-0 min-h-[100px] relative z-10">${listHtml}</div>
+                            ${!isGuest ? `
+                            <div class="mt-6 pt-4 border-t-2 border-dashed border-teal-100 relative z-10">
+                                <div class="flex gap-2 mb-3">
+                                    <button onclick="window.setWishCategory('food')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${state.wishCategory==='food'?'bg-orange-100/90 text-orange-600 border border-orange-200 shadow-sm':'bg-white text-gray-500 border border-white shadow-sm'}">🥭 想吃</button>
+                                    <button onclick="window.setWishCategory('spot')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${state.wishCategory==='spot'?'bg-blue-100/90 text-blue-600 border border-blue-200 shadow-sm':'bg-white text-gray-500 border border-white shadow-sm'}">🏖️ 想去</button>
+                                    <button onclick="window.setWishCategory('buy')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${state.wishCategory==='buy'?'bg-pink-100/90 text-pink-600 border border-pink-200 shadow-sm':'bg-white text-gray-500 border border-white shadow-sm'}">🛍️ 想買</button>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="text" id="new-wish-item" placeholder="例如：吃火山排骨..." onkeydown="if(event.key === 'Enter') window.addWish()" class="flex-1 bg-white border border-white shadow-sm rounded-[1.5rem] px-4 py-4 text-sm font-bold text-[#4A3B32] focus:ring-2 focus:ring-teal-300 focus:bg-white outline-none transition-colors" />
+                                    <button onclick="window.addWish()" class="w-14 h-14 shrink-0 flex items-center justify-center bg-gradient-to-r from-teal-400 to-emerald-500 text-white rounded-[1.5rem] shadow-sm active:scale-95 border border-teal-400"><i data-lucide="send" class="w-5 h-5"></i></button>
+                                </div>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        const renderModals = () => {
+            const root = document.getElementById('modal-root');
+            let html = '';
+
+            if (state.showUserSelect) {
+                const createBtn = (id, isGuest = false) => {
+                    const p = userProfiles[id];
+                    const iconDisplay = p.img ? `<img src="${p.img}" class="w-full h-full object-cover bg-white">` : `<span class="text-2xl">${p.icon}</span>`;
+                    
+                    if (isGuest) {
+                        return `
+                            <button onclick="window.selectUser('${id}')" class="flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-white/90 border-[3px] border-white shadow-sm hover:scale-105 active:scale-95 transition-all w-full backdrop-blur-sm">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center ${p.color} overflow-hidden shadow-inner border border-white">${iconDisplay}</div>
+                                <span class="font-black text-[#4A3B32] text-sm">${p.name} (僅供瀏覽)</span>
+                            </button>
+                        `;
+                    }
+                    return `
+                        <button onclick="window.selectUser('${id}')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-[2rem] bg-white/90 border-[3px] border-white shadow-sm hover:scale-105 active:scale-95 transition-all backdrop-blur-sm">
+                            <div class="w-16 h-16 rounded-full flex items-center justify-center ${p.color} overflow-hidden shadow-inner border-[3px] border-white">${iconDisplay}</div>
+                            <span class="font-black text-[#4A3B32] tracking-wide">${p.name}</span>
+                        </button>
+                    `;
+                };
+
+                html += `
+                    <div class="fixed inset-0 z-[200] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-5 print-hide">
+                        <div class="bg-gradient-to-b from-[#FFF9F2] to-[#FFE8D6] w-full max-w-[360px] max-h-[90vh] overflow-y-auto no-scrollbar rounded-[2.5rem] p-8 shadow-2xl text-center animate-pop border-4 border-white relative">
+                            <div class="mb-8 relative z-10">
+                                <div class="inline-flex items-center justify-center bg-white px-4 py-1.5 rounded-full mb-3 shadow-sm border border-orange-100 text-orange-500 font-black text-xs tracking-widest">
+                                    ✨ CHOOSE PROFILE ✨
+                                </div>
+                                <h2 class="text-[22px] font-black text-orange-500 drop-shadow-sm mb-1">請問你是哪一位旅伴？</h2>
+                                <p class="text-[11px] font-bold text-[#4A3B32]/60">點擊你的專屬頭像進入曼谷行程</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 relative z-10 mb-5">${createBtn('peilin')}${createBtn('mom')}${createBtn('chihjung')}${createBtn('chunyen')}</div>
+                            <div class="flex justify-center relative z-10 border-t-2 border-dashed border-orange-200/60 pt-5">${createBtn('guest', true)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (state.modalConfig.isOpen) {
+                const types = [ { id: 'spot', label: '景點', icon: '<i data-lucide="map-pin" class="w-4 h-4"></i>', color: 'text-orange-600', bg: 'bg-orange-100' }, { id: 'food', label: '美食', icon: CustomIcons.Utensils, color: 'text-teal-600', bg: 'bg-teal-100' }, { id: 'hotel', label: '住宿', icon: '<i data-lucide="bed" class="w-4 h-4"></i>', color: 'text-yellow-600', bg: 'bg-yellow-100' }, { id: 'transport', label: '交通', icon: '<i data-lucide="car" class="w-4 h-4"></i>', color: 'text-gray-600', bg: 'bg-gray-200' }, { id: 'flight', label: '航班', icon: '<i data-lucide="plane" class="w-4 h-4"></i>', color: 'text-sky-600', bg: 'bg-sky-100' } ];
+                let typeButtonsHtml = types.map(t => `<button type="button" onclick="window.updateFormType('${t.id}')" class="flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-xl font-black text-[10px] transition-all ${state.formData.type === t.id ? `${t.bg} ${t.color} shadow-sm` : 'text-gray-400 hover:bg-white'}">${t.icon}${t.label}</button>`).join('');
+                
+                const wm = state.modalConfig.isEdit ? CUSTOM_IMAGES.watermarks.modalEdit : CUSTOM_IMAGES.watermarks.modalAdd;
+
+                html += `
+                    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 print-hide">
+                        <div class="bg-[#FFF9F2] w-full max-w-[400px] flex flex-col rounded-[2rem] shadow-2xl max-h-[85vh] border-4 border-white animate-pop overflow-hidden relative">
+                            <img src="${wm}" class="watermark w-48 -bottom-4 -right-4 opacity-[0.08]" />
+                            <div class="flex justify-between items-center px-6 py-5 border-b border-orange-100 bg-[#FFF9F2]/90 backdrop-blur shrink-0 relative z-10">
+                                <h3 class="text-lg font-black text-[#4A3B32] flex items-center gap-2"><i data-lucide="sparkles" class="w-5 h-5 text-orange-500"></i> ${state.modalConfig.isEdit ? '編輯行程' : '新增曼谷行程'}</h3>
+                                <button onclick="window.closeModal()" class="p-1.5 bg-white rounded-full shadow-sm text-gray-400 active:scale-95"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="px-6 py-5 overflow-y-auto space-y-5 relative z-10">
+                                <div class="flex gap-2 bg-white/90 p-1.5 rounded-2xl shadow-inner overflow-x-auto no-scrollbar border border-white">${typeButtonsHtml}</div>
+                                <div><label class="text-[11px] font-bold text-[#4A3B32]/60 mb-1 block">時間或時段</label><input type="text" value="${escapeHTML(state.formData.time) || ''}" oninput="window.updateFormData('time', this.value)" placeholder="輸入時間 (例: 14:00)" class="w-full bg-white/90 border border-white shadow-sm rounded-xl px-3 py-2.5 text-base font-bold text-[#4A3B32] focus:ring-2 focus:ring-orange-200 outline-none" /></div>
+                                <div><label class="text-[11px] font-bold text-[#4A3B32]/60 mb-1 block">地點 / 標題 (必填)</label><input type="text" value="${escapeHTML(state.formData.location) || ''}" oninput="window.updateFormData('location', this.value)" placeholder="要去哪裡玩？" class="w-full bg-white/90 border border-white shadow-sm rounded-xl px-3 py-2.5 text-base font-bold text-[#4A3B32] focus:ring-2 focus:ring-orange-200 outline-none" /></div>
+                                <div><label class="text-[11px] font-bold text-[#4A3B32]/60 mb-1 block">備註說明</label><textarea rows="2" oninput="window.updateFormData('notes', this.value)" placeholder="記下想做的事..." class="w-full bg-white/90 border border-white shadow-sm rounded-xl px-3 py-2.5 text-base font-bold text-[#4A3B32] focus:ring-2 focus:ring-orange-200 outline-none resize-none">${escapeHTML(state.formData.notes) || ''}</textarea></div>
+                                <div><label class="text-[11px] font-bold text-[#4A3B32]/60 mb-1 block">票卷 / 細節資訊</label><input type="text" value="${escapeHTML(state.formData.detail) || ''}" oninput="window.updateFormData('detail', this.value)" placeholder="例: 班機號碼" class="w-full bg-white/90 border border-white shadow-sm rounded-xl px-3 py-2.5 text-base font-bold text-[#4A3B32] focus:ring-2 focus:ring-orange-200 outline-none" /></div>
+                                <button onclick="window.saveItinerary()" class="w-full bg-gradient-to-r from-orange-400 to-orange-500 text-white font-black text-lg py-3.5 rounded-2xl shadow-md active:scale-95 flex items-center justify-center gap-2"><i data-lucide="save" class="w-5 h-5"></i>儲存行程</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (state.expenseModal.isOpen) {
+                const isTHB = state.expenseModal.currency !== 'TWD';
+                html += `
+                    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 print-hide">
+                        <div class="bg-gradient-to-br from-teal-50 to-emerald-50 w-full max-w-[400px] flex flex-col rounded-[2rem] shadow-2xl max-h-[85vh] border-4 border-white animate-pop overflow-hidden relative">
+                            <img src="${CUSTOM_IMAGES.watermarks.modalExpense}" class="watermark w-48 -bottom-4 -left-4 opacity-[0.08]" style="transform: scaleX(-1);" />
+                            <div class="flex justify-between items-center px-6 py-5 border-b border-teal-100/50 shrink-0 relative z-10">
+                                <h3 class="text-lg font-black text-teal-600 flex items-center gap-2"><i data-lucide="wallet" class="w-5 h-5"></i> 記一筆花費</h3>
+                                <button onclick="window.closeExpenseModal()" class="p-1.5 bg-white rounded-full shadow-sm text-gray-400 active:scale-95"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="px-6 py-5 overflow-y-auto space-y-5 relative z-10">
+                                <div><label class="text-[11px] font-bold text-teal-600/60 mb-1 block">買了什麼好東西？</label><input type="text" value="${escapeHTML(state.expenseModal.description)}" oninput="window.updateExpenseForm('description', this.value)" placeholder="例如：大象褲、泰奶" class="w-full bg-white/90 border border-white shadow-sm rounded-xl px-4 py-3 text-base font-bold text-[#4A3B32] focus:ring-2 focus:ring-teal-300 outline-none" /></div>
+                                <div>
+                                    <label class="text-[11px] font-bold text-teal-600/60 mb-1 block">這筆是刷什麼幣值？</label>
+                                    <div class="flex bg-white/80 p-1 rounded-[1rem] mb-3 shadow-inner border border-teal-50">
+                                        <button onclick="window.updateExpenseForm('currency', 'THB')" class="flex-1 py-2 text-xs font-black rounded-xl transition-all ${isTHB ? 'bg-white shadow-sm text-teal-500' : 'text-gray-400 hover:text-teal-500'}">泰銖 (THB)</button>
+                                        <button onclick="window.updateExpenseForm('currency', 'TWD')" class="flex-1 py-2 text-xs font-black rounded-xl transition-all ${!isTHB ? 'bg-white shadow-sm text-teal-500' : 'text-gray-400 hover:text-teal-500'}">台幣 (TWD)</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-[11px] font-bold text-teal-600/60 mb-1 block">花了多少錢？</label>
+                                    <div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-teal-500 text-lg">${isTHB ? '฿' : 'NT$'}</span><input type="number" value="${state.expenseModal.amount}" oninput="window.updateExpenseForm('amount', this.value)" placeholder="0" class="w-full bg-white/90 border border-white shadow-sm rounded-xl py-3 pl-[3.5rem] pr-4 text-xl font-black text-teal-600 focus:ring-2 focus:ring-teal-300 outline-none" /></div>
+                                </div>
+                                <div class="bg-white/80 border border-teal-100 rounded-xl p-3 text-center"><span class="text-[10px] font-bold text-teal-500">這筆帳只有選了「${userProfiles[state.currentUser || 'peilin'].name}」才看得到🤫</span></div>
+                                <button onclick="window.saveExpense()" class="w-full mt-2 bg-gradient-to-r from-teal-400 to-emerald-500 text-white font-black text-lg py-3.5 rounded-2xl shadow-[0_4px_15px_rgba(20,184,166,0.3)] active:scale-95 flex items-center justify-center gap-2 border border-teal-400"><i data-lucide="check" class="w-5 h-5"></i>偷偷記下來</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (state.shoppingModal.isOpen) {
+                html += `
+                    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 print-hide">
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 w-full max-w-[400px] flex flex-col rounded-[2rem] shadow-2xl max-h-[85vh] border-4 border-white animate-pop overflow-hidden relative">
+                            <img src="${CUSTOM_IMAGES.watermarks.modalShop}" class="watermark w-48 -top-4 -right-4 opacity-[0.08]" />
+                            <div class="flex justify-between items-center px-6 py-5 border-b border-orange-200/50 shrink-0 relative z-10">
+                                <h3 class="text-lg font-black text-orange-500 flex items-center gap-2">${CustomIcons.Bag} ${state.shoppingModal.isEdit ? '編輯購物清單' : '新增購物清單'}</h3>
+                                <button onclick="window.closeShoppingModal()" class="p-1.5 bg-white rounded-full shadow-sm text-gray-400 active:scale-95"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="px-6 py-5 overflow-y-auto space-y-5 relative z-10">
+                                <div class="text-center">
+                                    <div onclick="document.getElementById('shopping-photo-upload').click()" class="w-32 h-32 mx-auto bg-white/90 border-2 border-dashed border-orange-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 transition-colors shadow-sm overflow-hidden relative group">
+                                        ${state.shoppingModal.image ? 
+                                            `<img src="${state.shoppingModal.image}" class="w-full h-full object-cover">
+                                             <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="camera" class="w-8 h-8 text-white"></i></div>` : 
+                                            `<i data-lucide="image-plus" class="w-8 h-8 text-orange-300 mb-2"></i><span class="text-[10px] font-bold text-orange-400">點擊上傳截圖</span>`
+                                        }
+                                    </div>
+                                    <p class="text-[9px] text-orange-400 mt-2 font-bold">附上圖片找東西最快！</p>
+                                </div>
+                                
+                                <div><label class="text-[11px] font-bold text-orange-600/60 mb-1 block">物品名稱 (必填)</label><input type="text" value="${escapeHTML(state.shoppingModal.name)}" oninput="window.updateShoppingForm('name', this.value)" placeholder="例如：芒果乾、鼻通..." class="w-full bg-white/90 border border-white shadow-sm rounded-xl px-4 py-3 text-base font-bold text-[#4A3B32] focus:ring-2 focus:ring-orange-300 outline-none" /></div>
+                                <div>
+                                    <label class="text-[11px] font-bold text-orange-600/60 mb-1 block">預期價格 (泰銖)</label>
+                                    <div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-orange-400 text-lg">฿</span><input type="number" value="${state.shoppingModal.price}" oninput="window.updateShoppingForm('price', this.value)" placeholder="100" class="w-full bg-white/90 border border-white shadow-sm rounded-xl py-3 pl-[2.5rem] pr-4 text-xl font-black text-orange-500 focus:ring-2 focus:ring-orange-300 outline-none" /></div>
+                                </div>
+                                
+                                <button onclick="window.saveShoppingItem()" class="w-full mt-2 bg-gradient-to-r from-orange-400 to-orange-500 text-white font-black text-lg py-3.5 rounded-2xl shadow-[0_4px_15px_rgba(249,115,22,0.3)] active:scale-95 flex items-center justify-center gap-2 border border-orange-400"><i data-lucide="save" class="w-5 h-5"></i>${state.shoppingModal.isEdit ? '儲存修改' : '加進購物車'}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (state.imageViewer.isOpen) {
+                html += `
+                    <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 print-hide transition-opacity backdrop-blur-md" onclick="window.closeImageViewer()">
+                        <button onclick="window.closeImageViewer()" class="absolute top-6 right-6 p-2 bg-white/10 rounded-full text-white hover:bg-white/20 active:scale-95 transition-all z-50"><i data-lucide="x" class="w-6 h-6"></i></button>
+                        <img src="${state.imageViewer.src}" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-pop" onclick="event.stopPropagation()" />
+                    </div>
+                `;
+            }
+
+            if (state.deleteConfirm.isOpen) {
+                html += `
+                    <div class="fixed inset-0 z-[110] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-5 print-hide">
+                        <div class="bg-white w-full max-w-[300px] rounded-[2rem] p-6 shadow-2xl transform animate-pop text-center border-4 border-orange-50">
+                            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-red-100"><i data-lucide="alert-triangle" class="w-8 h-8 text-red-400"></i></div>
+                            <h3 class="text-xl font-black text-[#4A3B32] mb-2">確定要刪除嗎？</h3>
+                            <p class="text-sm font-bold text-[#4A3B32]/60 mb-6">即將刪除 <span class="text-orange-500 px-1">${escapeHTML(state.deleteConfirm.location)}</span>，刪除後無法復原喔！</p>
+                            <div class="flex gap-3">
+                                <button onclick="window.closeDeleteModal()" class="flex-1 py-3 rounded-xl font-black text-[#4A3B32] bg-[#F1F5F9] active:scale-95">取消</button>
+                                <button onclick="window.executeDelete()" class="flex-1 py-3 rounded-xl font-black text-white bg-red-400 shadow-md active:scale-95">確定刪除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (root.innerHTML !== html) root.innerHTML = html;
+        };
+
+        window.openBookletPreview = () => {
+            const container = document.getElementById('booklet-preview-container');
+            const app = document.getElementById('app-container');
+            let html = `
+                <div class="sticky top-0 w-full bg-orange-400 z-50 print-hide shadow-md">
+                    <div class="max-w-[800px] mx-auto flex justify-between items-center p-3 relative">
+                        <button onclick="window.closeBookletPreview()" class="text-white font-black px-3 py-2 bg-black/10 rounded-full active:scale-95 flex items-center gap-1"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                        <button onclick="window.printBooklet()" class="bg-orange-600 text-white px-5 py-2.5 rounded-full font-black shadow-lg flex items-center justify-center gap-2 active:scale-95 border border-orange-500 absolute left-1/2 -translate-x-1/2 whitespace-nowrap"><i data-lucide="printer" class="w-5 h-5"></i> 點擊列印或儲存為 PDF</button>
+                    </div>
+                    <div class="bg-orange-200 text-orange-800 text-center text-[10px] py-1.5 font-bold tracking-wide">💡 提示：列印時建議勾選「背景圖形」以保留最美的顏色喔！</div>
+                </div>
+                <div class="max-w-[800px] mx-auto bg-white min-h-screen pb-20 shadow-2xl print:shadow-none print:pb-0 font-sans">
+                    <div class="text-center pt-32 pb-40 px-8 relative page-break">
+                        <div class="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#FFF9F2] to-transparent pointer-events-none"></div>
+                        <h1 class="text-4xl font-black text-orange-500 mb-4 relative z-10 flex items-center justify-center gap-3">🌴 曼谷度假時光 🌴</h1>
+                        <p class="text-[13px] font-black text-gray-400 tracking-[0.2em] mb-12 relative z-10">2026.12.18 - 12.27 Bangkok</p>
+                        <div class="max-w-[320px] mx-auto bg-white p-3 rounded-3xl shadow-[0_10px_40px_rgba(249,115,22,0.2)] border border-orange-100 rotate-2 relative z-10 mb-16"><div class="aspect-[4/3] rounded-2xl overflow-hidden bg-orange-50 relative"><img src="${CUSTOM_IMAGES.banner}" class="w-full h-full object-cover absolute inset-0" /></div></div>
+                        <h2 class="text-xl font-black text-teal-600 mb-2 relative z-10">我們的專屬回憶錄</h2>
+                        <p class="text-xs font-bold text-gray-400 tracking-widest relative z-10">泰國旅遊小書</p>
+                    </div>
+                    <div class="px-8 md:px-16 py-12 page-break">
+                        <h2 class="text-2xl font-black text-orange-500 mb-8 text-center flex items-center justify-center gap-2 border-b border-orange-100 pb-4"><i data-lucide="backpack" class="w-6 h-6"></i> 行前清單</h2>
+                        <div class="space-y-3">
+            `;
+            state.checklist.forEach(item => { const p = userProfiles[item.assignee] || userProfiles['all']; html += `<div class="flex items-center justify-between border-b border-gray-50 pb-3"><div class="flex items-center gap-3"><span class="w-5 h-5 rounded border-2 flex items-center justify-center ${item.checked ? 'border-gray-300 bg-gray-100 text-gray-400' : 'border-gray-300'}">${item.checked ? '<i data-lucide="check" class="w-3 h-3"></i>' : ''}</span><span class="font-bold text-gray-700 ${item.checked ? 'text-gray-400 line-through' : ''}">${escapeHTML(item.text)}</span></div><span class="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-full">${p.name}</span></div>`; });
+            html += `</div></div><div class="px-8 md:px-16 py-12 page-break"><h2 class="text-2xl font-black text-teal-500 mb-8 text-center flex items-center justify-center gap-2 border-b border-teal-100 pb-4">✨ 我們的許願池</h2><div class="space-y-3 text-center">`;
+            if(state.wishes.length > 0) { state.wishes.forEach(w => { const p = userProfiles[w.addedBy] || userProfiles['guest']; html += `<p class="font-bold text-gray-600 ${w.checked ? 'line-through text-gray-400' : ''}">${escapeHTML(w.text)} <span class="text-xs text-gray-400 ml-2">(${p.name})</span></p>`; }); } else { html += `<p class="text-gray-400 text-sm font-bold">還沒有新增願望喔！</p>`; }
+            html += `</div></div><div class="px-8 md:px-16 py-12 bg-orange-50/50 page-break"><h2 class="text-2xl font-black text-orange-500 mb-12 text-center flex items-center justify-center gap-2 border-b border-orange-200 pb-4"><i data-lucide="calendar-days" class="w-6 h-6"></i> 行程總表</h2>`;
+            days.forEach((day, i) => {
+                const items = state.itinerary[day.id] || [];
+                if (items.length > 0) {
+                    html += `<div class="mb-12 avoid-break"><div class="inline-block bg-gradient-to-r from-orange-100 to-white border border-orange-200 rounded-full px-5 py-1.5 mb-6 shadow-sm"><span class="text-orange-600 font-black text-sm tracking-widest uppercase">DAY ${i+1} - ${day.date} ${day.name}</span></div><div class="space-y-8 pl-2">`;
+                    items.forEach(item => {
+                        html += `
+                            <div class="flex gap-4">
+                                <div class="w-24 shrink-0 text-orange-500 font-black text-[13px] pt-1">${escapeHTML(item.time)}</div>
+                                <div class="flex-1 pb-6 ${items.indexOf(item) !== items.length -1 ? 'border-b border-gray-100' : ''}">
+                                    <div class="flex items-center gap-2 mb-1"><h4 class="text-lg font-black text-gray-800">${escapeHTML(item.location)}</h4></div>
+                                    ${item.detail ? `<p class="text-xs font-bold text-sky-500 mb-2 flex items-center gap-1"><i data-lucide="ticket" class="w-3 h-3"></i> ${escapeHTML(item.detail)}</p>` : ''}
+                                    ${item.notes ? `<p class="text-[13px] font-bold text-gray-500 leading-relaxed whitespace-pre-line mb-3">${escapeHTML(item.notes)}</p>` : ''}
+                                    ${item.image ? `<img src="${item.image}" class="w-full max-w-[400px] rounded-2xl object-cover shadow-sm border border-gray-100 mt-2" />` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div></div>`;
+                }
+            });
+            html += `</div><div class="px-8 md:px-16 py-12 page-break"><h2 class="text-2xl font-black text-rose-500 mb-8 text-center flex items-center justify-center gap-2 border-b border-rose-100 pb-4"><i data-lucide="book-open" class="w-6 h-6"></i> 交換日記</h2><div class="space-y-4">`;
+            if (state.diaries.length > 0) {
+                 state.diaries.slice().reverse().forEach(d => { const p = userProfiles[d.owner] || userProfiles['guest']; html += `<div class="bg-rose-50/50 p-5 rounded-2xl border border-rose-100 avoid-break"><div class="flex justify-between items-center mb-3"><div class="flex items-center gap-2"><span class="text-xl">${d.mood}</span><span class="font-black text-rose-500 text-sm">${p.name}</span></div><span class="text-[10px] text-gray-400 font-bold">${d.date}</span></div><p class="text-gray-700 font-bold text-[14px] leading-relaxed">${escapeHTML(d.text)}</p></div>`; });
+            } else { html += `<p class="text-gray-400 text-sm font-bold text-center">還沒有日記喔！</p>`; }
+            html += `</div></div><div class="px-8 md:px-16 py-12 page-break"><h2 class="text-2xl font-black text-sky-500 mb-8 text-center flex items-center justify-center gap-2 border-b border-sky-100 pb-4"><i data-lucide="camera" class="w-6 h-6"></i> 拍立得回憶</h2><div class="grid grid-cols-2 gap-6">`;
+            if (state.memories.length > 0) {
+                state.memories.forEach(mem => { const p = userProfiles[mem.addedBy] || userProfiles['guest']; html += `<div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm avoid-break flex flex-col"><img src="${mem.image}" class="w-full aspect-[4/3] object-cover rounded-xl mb-3" /><p class="text-[13px] font-black text-center text-gray-700 mb-1 flex-1 flex items-center justify-center">${escapeHTML(mem.caption)}</p><p class="text-[9px] text-gray-400 text-center font-bold mt-2">${mem.date} · ${p.name}</p></div>`; });
+            } else { html += `<div class="col-span-2 text-center text-gray-400 text-sm font-bold">還沒有照片喔！</div>`; }
+            html += `</div><div class="text-center mt-20 pb-10"><p class="text-orange-300 font-black text-xl tracking-widest italic">The End</p></div></div></div>`;
+            container.innerHTML = html; app.classList.add('hidden'); container.classList.remove('hidden'); if (window.lucide) window.lucide.createIcons(); window.scrollTo(0,0);
+        };
+
+        window.closeBookletPreview = () => { document.getElementById('booklet-preview-container').classList.add('hidden'); document.getElementById('booklet-preview-container').innerHTML = ''; document.getElementById('app-container').classList.remove('hidden'); };
+        window.printBooklet = () => { setTimeout(() => { window.print(); }, 300); };
+        window.openImageViewer = (src) => { state.imageViewer = { isOpen: true, src: src }; window.renderDOM(); };
+        window.closeImageViewer = () => { state.imageViewer.isOpen = false; window.renderDOM(); };
+        window.triggerItineraryPhoto = (dayId, idx) => { state.uploadingItineraryPhoto = { dayId, idx }; document.getElementById('itinerary-photo-upload').click(); };
+
+        window.handleItineraryPhotoUpload = (e) => {
+            const file = e.target.files[0]; const { dayId, idx } = state.uploadingItineraryPhoto;
+            if (!file || !dayId) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
+                    if (w > h) { if (w > 800) { h *= 800 / w; w = 800; } } else { if (h > 800) { w *= 800 / h; h = 800; } }
+                    canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    state.itinerary[dayId][idx].image = canvas.toDataURL('image/jpeg', 0.7); window.saveToCloud(); window.showToast('照片上傳成功！');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file); e.target.value = ''; state.uploadingItineraryPhoto = { dayId: null, idx: null };
+        };
+
+        window.deleteItineraryPhoto = (dayId, idx) => { delete state.itinerary[dayId][idx].image; window.saveToCloud(); };
+        window.openShoppingModal = () => { state.shoppingModal = { isOpen: true, isEdit: false, id: null, name: '', price: '', image: null }; window.renderDOM(); };
+        window.editShoppingItem = (id) => { const item = state.shoppingList.find(i => String(i.id) === String(id)); if(item) { state.shoppingModal = { isOpen: true, isEdit: true, id: item.id, name: item.name, price: item.price || '', image: item.image || null }; window.renderDOM(); } };
+        window.closeShoppingModal = () => { state.shoppingModal.isOpen = false; window.renderDOM(); };
+        window.updateShoppingForm = (key, val) => { state.shoppingModal[key] = val; };
+        
+        window.handleShoppingPhotoUpload = (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
+                    if (w > h) { if (w > 300) { h *= 300 / w; w = 300; } } else { if (h > 300) { w *= 300 / h; h = 300; } }
+                    canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    state.shoppingModal.image = canvas.toDataURL('image/jpeg', 0.6); window.renderDOM();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file); e.target.value = '';
+        };
+
+        window.saveShoppingItem = () => {
+            if (!state.shoppingModal.name.trim()) { window.showToast('要記得填寫物品名稱喔！🛍️'); return; }
+            if (state.shoppingModal.isEdit) { state.shoppingList = state.shoppingList.map(item => String(item.id) === String(state.shoppingModal.id) ? { ...item, name: state.shoppingModal.name.trim(), price: state.shoppingModal.price, image: state.shoppingModal.image } : item); } 
+            else { state.shoppingList.push({ id: Date.now(), name: state.shoppingModal.name.trim(), price: state.shoppingModal.price, image: state.shoppingModal.image, checked: false }); }
+            state.shoppingModal.isOpen = false; window.saveToCloud();
+        };
+
+        window.toggleShoppingItem = (id) => { state.shoppingList = state.shoppingList.map(i => String(i.id) === String(id) ? { ...i, checked: !i.checked } : i); window.saveToCloud(); };
+        window.deleteShoppingItem = (id) => { state.shoppingList = state.shoppingList.filter(item => String(item.id) !== String(id)); window.saveToCloud(); };
+        window.switchMemoryMode = (mode) => { state.activeMemoryMode = mode; window.renderDOM(); };
+        window.setDiaryMood = (mood) => { state.diaryMood = mood; window.renderDOM(); };
+        window.addDiary = () => { const input = document.getElementById('new-diary-input'); const text = input.value.trim(); if (!text) { window.showToast('要打些字才能寫日記喔！'); return; } state.diaries.push({ id: Date.now(), text: text, mood: state.diaryMood, date: new Date().toLocaleString('zh-TW', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), owner: state.currentUser || 'peilin' }); window.saveToCloud(); };
+        window.deleteDiary = (id) => { state.diaries = state.diaries.filter(d => String(d.id) !== String(id)); window.saveToCloud(); };
+        window.switchListMode = (mode) => { state.activeListMode = mode; window.renderDOM(); };
+        window.setWishCategory = (cat) => { state.wishCategory = cat; window.renderDOM(); };
+        window.addWish = () => { const input = document.getElementById('new-wish-item'); const text = input.value.trim(); if (!text) return; state.wishes.push({ id: Date.now(), text: text, type: state.wishCategory, checked: false, addedBy: state.currentUser || 'guest' }); window.saveToCloud(); };
+        window.toggleWish = (id) => { state.wishes = state.wishes.map(i => String(i.id) === String(id) ? { ...i, checked: !i.checked } : i); window.saveToCloud(); };
+        window.editWish = (id) => { const item = state.wishes.find(i => String(i.id) === String(id)); if (item) { const newText = prompt('修改你的願望：', item.text); if (newText !== null && newText.trim() !== '') { state.wishes = state.wishes.map(i => String(i.id) === String(id) ? { ...i, text: newText.trim() } : i); window.saveToCloud(); } } };
+        window.deleteWish = (id) => { state.wishes = state.wishes.filter(item => String(item.id) !== String(id)); window.saveToCloud(); };
+        window.openExpenseModal = () => { state.expenseModal = { isOpen: true, description: '', amount: '', currency: 'THB' }; window.renderDOM(); };
+        window.closeExpenseModal = () => { state.expenseModal.isOpen = false; window.renderDOM(); };
+        window.updateExpenseForm = (f, v) => { state.expenseModal[f] = v; if(f==='currency') window.renderDOM(); };
+        window.saveExpense = () => { if (!state.expenseModal.description.trim() || !state.expenseModal.amount) { window.showToast('請輸入花費項目和金額喔！'); return; } state.expenses.push({ id: Date.now(), date: new Date().toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' }), description: state.expenseModal.description.trim(), amount: parseFloat(state.expenseModal.amount), currency: state.expenseModal.currency || 'THB', owner: state.currentUser }); state.expenseModal.isOpen = false; window.saveToCloud(); };
+        window.deleteExpense = (id) => { state.expenses = state.expenses.filter(e => String(e.id) !== String(id)); window.saveToCloud(); };
+        window.showUserSelectModal = () => { state.showUserSelect = true; window.renderDOM(); };
+        window.selectUser = (userId) => { state.currentUser = userId; state.showUserSelect = false; state.activeChecklistTab = userId === 'guest' ? 'all' : userId; window.renderDOM(); };
+        window.switchChecklistTab = (tabId) => { state.activeChecklistTab = tabId; window.renderDOM(); };
+        window.triggerPhotoUpload = () => { document.getElementById('photo-upload').click(); };
+        
+        window.handlePhotoUpload = (e) => {
+            const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); let w = img.width, h = img.height;
+                    if (w > h) { if (w > 400) { h *= 400 / w; w = 400; } } else { if (h > 400) { w *= 400 / h; h = 400; } }
+                    canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.6);
+                    setTimeout(() => { const caption = prompt('為這張相片寫下一句回憶吧！'); if (caption !== null) { state.memories.unshift({ id: Date.now(), image: base64, caption: caption || '美好的一天', date: new Date().toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' }), addedBy: state.currentUser }); window.saveToCloud(); } }, 100);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file); e.target.value = '';
+        };
+
+        window.deleteMemory = (id) => { state.memories = state.memories.filter(m => String(m.id) !== String(id)); window.saveToCloud(); };
+        window.playGacha = () => {
+            if (state.gachaAnimating) return; state.gachaAnimating = true; window.renderDOM();
+            const opts = ['打拋豬 🍛', '泰式炒河粉 🍝', '冬蔭功湯 🦐', '芒果糯米飯 🥭', '咖哩螃蟹 🦀', '香蕉煎餅 🍌', '泰式烤肉串 🍢', '青木瓜沙拉 🥗', '火山排骨 🌋']; let ticks = 0;
+            const int = setInterval(() => {
+                state.gachaResult = opts[Math.floor(Math.random() * opts.length)]; window.renderDOM(); ticks++;
+                if(ticks > 15) { clearInterval(int); state.gachaAnimating = false; state.gachaResult = `🐘 小象說：吃【${state.gachaResult}】！讚啦！`; window.renderDOM(); }
+            }, 100);
+        };
+
+        window.toggleCheck = (id) => { state.checklist = state.checklist.map(i => String(i.id) === String(id) ? { ...i, checked: !i.checked } : i); window.saveToCloud(); };
+        window.addChecklistItem = () => { const input = document.getElementById('new-checklist-item'); if (!input.value.trim()) return; state.checklist.push({ id: Date.now(), text: input.value.trim(), checked: false, assignee: state.activeChecklistTab }); input.value = ''; window.saveToCloud(); };
+        window.editChecklistItem = (id) => { const item = state.checklist.find(i => String(i.id) === String(id)); if (item) { const newText = prompt('修改行李項目：', item.text); if (newText !== null && newText.trim() !== '') { state.checklist = state.checklist.map(i => String(i.id) === String(id) ? { ...i, text: newText.trim() } : i); window.saveToCloud(); } } };
+        window.deleteChecklistItem = (id) => { state.checklist = state.checklist.filter(i => String(i.id) !== String(id)); window.saveToCloud(); };
+        window.toggleRateEdit = (isEditing) => { state.isEditingRate = isEditing; window.renderDOM(); };
+        window.updateRateValue = (val) => { state.exchangeRate = parseFloat(val) || 0.9; state.isEditingRate = false; window.saveToCloud(); };
+        window.updateJpy = (val) => { state.jpyInput = val; window.renderDOM(); };
+        window.handleJpyInput = (val) => { state.jpyInput = val; const el = document.getElementById('twd-result-text'); if(el) el.innerText = `NT$ ${Math.round(val * state.exchangeRate).toLocaleString()}`; };
+        window.copyToClipboard = () => { const twd = Math.round(state.jpyInput * state.exchangeRate).toString(); if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(twd); else { const t = document.createElement("textarea"); t.value = twd; t.style.position="fixed"; t.style.left="-999999px"; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); } catch (err) {} t.remove(); } state.copied = true; window.renderDOM(); setTimeout(() => { state.copied = false; window.renderDOM(); }, 2000); };
+        window.openAddModal = () => { state.formData = { type: 'spot', time: '10:00-12:00', location: '', notes: '', detail: '', highlights: '' }; state.modalConfig = { isOpen: true, isEdit: false, dayId: state.activeDay, index: null }; window.renderDOM(); };
+        window.openEditModal = (dayId, idx) => { state.formData = { ...state.itinerary[dayId][idx] }; state.modalConfig = { isOpen: true, isEdit: true, dayId: dayId, index: idx }; window.renderDOM(); };
+        window.closeModal = () => { state.modalConfig.isOpen = false; window.renderDOM(); };
+        window.updateFormType = (type) => { state.formData.type = type; window.renderDOM(); };
+        window.updateFormData = (key, value) => { state.formData[key] = value; };
+        
+        window.saveItinerary = () => {
+            if (!state.formData.location.trim()) { window.showToast('請輸入地點！'); return; }
+            state.formData.addedBy = state.currentUser || 'peilin';
+            const dayList = [...(state.itinerary[state.modalConfig.dayId] || [])];
+            if (state.modalConfig.isEdit) dayList[state.modalConfig.index] = state.formData; else dayList.push(state.formData);
+            dayList.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+            state.itinerary[state.modalConfig.dayId] = dayList;
+            state.modalConfig.isOpen = false; window.saveToCloud(); 
+        };
+
+        window.confirmDelete = (dayId, idx) => { state.deleteConfirm = { isOpen: true, dayId: dayId, index: idx, location: state.itinerary[dayId][idx].location }; window.renderDOM(); };
+        window.closeDeleteModal = () => { state.deleteConfirm.isOpen = false; window.renderDOM(); };
+        window.executeDelete = () => { const dayList = [...(state.itinerary[state.deleteConfirm.dayId] || [])]; dayList.splice(state.deleteConfirm.index, 1); state.itinerary[state.deleteConfirm.dayId] = dayList; state.deleteConfirm = { isOpen: false, dayId: '', index: null, location: '' }; window.saveToCloud(); };
+
+        window.switchTab = (tabId) => { state.activeTab = tabId; state.isTabSwitch = true; window.scrollTo({top: 0, behavior: 'smooth'}); window.renderDOM(); };
+        window.switchDay = (dayId) => { state.activeDay = dayId; state.activeAI = null; state.copyItinerarySuccess = false; state.needsScrollCenter = true; window.scrollTo({top: 0, behavior: 'smooth'}); window.renderDOM(); };
+        
+        window.toggleAI = (idx) => {
+            const box = document.getElementById(`ai-box-${idx}`); const btn = document.getElementById(`ai-btn-${idx}`); if (!box || !btn) return;
+            if (box.classList.contains('hidden')) { box.classList.remove('hidden'); box.classList.add('block'); btn.className = "flex items-center gap-1.5 px-3.5 py-2 rounded-full font-black active:scale-95 border shadow-sm bg-orange-500 text-white border-orange-500 transition-colors"; } 
+            else { box.classList.add('hidden'); box.classList.remove('block'); btn.className = "flex items-center gap-1.5 px-3.5 py-2 rounded-full font-black active:scale-95 border shadow-sm border-white bg-white text-orange-500 transition-colors hover:bg-orange-50"; }
+        };
+
+        window.openGoogleMapsRoute = () => { const i = state.itinerary[state.activeDay] || []; if(i.length) window.open(`https://www.google.com/maps/dir/${i.map(item => encodeURIComponent(item.location)).join('/')}`, '_blank'); };
+        window.openGoogleMaps = (dayId, idx) => { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(state.itinerary[dayId][idx].location)}`, '_blank', 'noopener,noreferrer'); };
+        
+        window.copyTodayItinerary = () => {
+            const dayInfo = days.find(d => d.id === state.activeDay); const items = state.itinerary[state.activeDay] || []; if(!items.length) return;
+            let text = `📅 2026.${dayInfo.date} (${dayInfo.name}之旅)\n\n`; items.forEach(i => { text += `📍 ${i.time} | ${i.location}\n` + (i.detail?`   🎟️ ${i.detail}\n`:'') + (i.notes?`   📝 ${i.notes}\n`:'') + `\n`; });
+            if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text); else { const t = document.createElement("textarea"); t.value = text; t.style.position="fixed"; t.style.left="-999999px"; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); } catch (err) {} t.remove(); }
+            state.copyItinerarySuccess = true; window.renderDOM(); setTimeout(() => { state.copyItinerarySuccess = false; window.renderDOM(); }, 3000);
+        };
+
+        window.renderDOM();
+    </script>
+</body>
+</html>
