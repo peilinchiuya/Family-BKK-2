@@ -86,16 +86,19 @@ html
             appId: "1:144110237020:web:7d8dc8500974a265c67d99"
         };
 
-        // 🖼️ 2. 不重複的圖示與浮水印替換區
+        // 🖼️ 2. 主題背景與各單元專屬圖庫
         const CUSTOM_IMAGES = {
             banner: 'https://duk.tw/3RaJj4.png', 
             exchangeIcon: 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png', 
             moneyGoneIcon: 'https://cdn-icons-png.flaticon.com/512/3135/3135706.png', 
             watermarks: {
                 prep: 'https://duk.tw/AkIwAZ.png',       // 大耳狗 (行李清單)
-                wish: 'https://duk.tw/XyQ4OQ.png',       // 吉伊卡哇魔法 (許願池)
+                shop: 'https://duk.tw/ySG17n.png',       // Hello Kitty (購物清單)
+                wish: 'https://duk.tw/BzOgWV.png',       // 布丁狗 (許願池)
                 account: 'https://duk.tw/0JZFA4.png',    // 帕恰狗 (記帳)
                 tool: 'https://duk.tw/zBRmvf.png',       // 吉伊卡哇開心 (轉盤/工具)
+                photo: 'https://duk.tw/0c00Vb.png',      // 拍立得
+                diary: 'https://duk.tw/VCm6aX.png',      // 交換日記
                 modalEdit: 'https://duk.tw/euSpN0.png',  // 酷洛米 (編輯彈窗)
                 modalAdd: 'https://duk.tw/P5fHdp.png',   // 小八貓 (新增彈窗)
                 modalExpense: 'https://duk.tw/9P6maK.png',// 庫洛米 (記帳彈窗)
@@ -103,18 +106,24 @@ html
             }
         };
 
-        // 10 天專屬的吉伊卡哇圖示 (不重複)
+        // 35個不重複的圖庫，供每日景點卡片輪流替換使用
+        const allItemWatermarks = [
+            'https://duk.tw/AkIwAZ.png', 'https://duk.tw/ySG17n.png', 'https://duk.tw/BzOgWV.png', 'https://duk.tw/0JZFA4.png', 
+            'https://duk.tw/euSpN0.png', 'https://duk.tw/0c00Vb.png', 'https://duk.tw/VCm6aX.png', 'https://duk.tw/ENOjBT.png', 
+            'https://duk.tw/es1I9N.png', 'https://duk.tw/5RtXJW.png', 'https://duk.tw/9P6maK.png', 'https://duk.tw/bGcJUI.png', 
+            'https://duk.tw/CpdAfW.png', 'https://duk.tw/v6c3m5.png', 'https://duk.tw/eMV9IP.png', 'https://duk.tw/XyQ4OQ.png', 
+            'https://duk.tw/zBRmvf.png', 'https://duk.tw/sZr9Vf.png', 'https://duk.tw/qTqGJf.png', 'https://duk.tw/IWMz4L.png', 
+            'https://duk.tw/Of6y5G.png', 'https://duk.tw/Flf3Ad.png', 'https://duk.tw/P5fHdp.png', 'https://duk.tw/W77EfE.png', 
+            'https://duk.tw/XJQK66.png', 'https://duk.tw/5DOXfD.png', 'https://duk.tw/puESqp.png', 'https://duk.tw/tYKkTE.png', 
+            'https://duk.tw/LQUVvz.png', 'https://duk.tw/uXB7HI.png', 'https://duk.tw/4IyZZ5.png', 'https://duk.tw/qNr75O.png', 
+            'https://duk.tw/KG8d0F.png', 'https://duk.tw/z76SKW.png', 'https://duk.tw/31gOg1.png'
+        ];
+
+        // 10 天專屬上方頁籤小圖示
         const dayIcons = [ 
-            'https://duk.tw/sZr9Vf.png', 
-            'https://duk.tw/qTqGJf.png', 
-            'https://duk.tw/IWMz4L.png', 
-            'https://duk.tw/Of6y5G.png', 
-            'https://duk.tw/Flf3Ad.png',
-            'https://duk.tw/W77EfE.png',
-            'https://duk.tw/XJQK66.png',
-            'https://duk.tw/5DOXfD.png',
-            'https://duk.tw/puESqp.png',
-            'https://duk.tw/tYKkTE.png' 
+            'https://duk.tw/sZr9Vf.png', 'https://duk.tw/qTqGJf.png', 'https://duk.tw/IWMz4L.png', 'https://duk.tw/Of6y5G.png', 
+            'https://duk.tw/Flf3Ad.png', 'https://duk.tw/W77EfE.png', 'https://duk.tw/XJQK66.png', 'https://duk.tw/5DOXfD.png',
+            'https://duk.tw/puESqp.png', 'https://duk.tw/tYKkTE.png' 
         ];
         
         const CustomIcons = { Utensils: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`, Copy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`, Bag: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>` };
@@ -162,40 +171,40 @@ html
                 { type: 'hotel', time: '凌晨', location: 'JASMINE 59 Hotel', notes: '抵達飯店！趕快休息補眠', addedBy: 'peilin' }
             ],
             'day2': [
-                { type: 'spot', time: '下午', location: '洽圖洽週末市集 Chatuchak', notes: '泰國最大市集！準備好爆買！', addedBy: 'chunyen' },
-                { type: 'food', time: '19:45-21:45', location: '白蘭花遊船 White Orchid Cruise', notes: '享受昭披耶河夜景與晚餐', addedBy: 'mom' },
-                { type: 'spot', time: '22:15後', location: 'Nikko Thai Massage 5', notes: '90分鐘按摩，消除疲勞', addedBy: 'chihjung' },
+                { type: 'spot', time: '下午', location: '洽圖洽週末市集 Chatuchak', notes: '泰國最大市集！準備好爆買！', addedBy: 'peilin' },
+                { type: 'food', time: '19:45-21:45', location: '白蘭花遊船 White Orchid Cruise', notes: '享受昭披耶河夜景與晚餐', addedBy: 'peilin' },
+                { type: 'spot', time: '22:15後', location: 'Nikko Thai Massage 5', notes: '90分鐘按摩，消除疲勞', addedBy: 'peilin' },
                 { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '續住', addedBy: 'peilin' }
             ],
             'day3': [
                 { type: 'spot', time: '08:15-09:15', location: '美功鐵道市場', notes: '看09:00火車經過！', addedBy: 'peilin' },
                 { type: 'food', time: '10:15-12:00', location: 'Bubble in the Forest Cafe', notes: '超美馬爾地夫風網美咖啡廳，狂拍照', addedBy: 'peilin' },
-                { type: 'spot', time: '12:30-14:30', location: '空叻瑪榮水上市場 + 午餐', notes: '逛在地市集吃美食', addedBy: 'mom' },
-                { type: 'food', time: '16:00-18:30', location: '吞武里海鮮市場 (晚餐)', notes: '晚餐大吃海鮮！', addedBy: 'chihjung' },
+                { type: 'spot', time: '12:30-14:30', location: '空叻瑪榮水上市場 + 午餐', notes: '逛在地市集吃美食', addedBy: 'peilin' },
+                { type: 'food', time: '16:00-18:30', location: '吞武里海鮮市場 (晚餐)', notes: '晚餐大吃海鮮！', addedBy: 'peilin' },
                 { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '續住', addedBy: 'peilin' }
             ],
             'day4': [
                 { type: 'spot', time: '08:00-11:00', location: '大城獅子王野生動物園', notes: '跟長頸鹿近距離拍照！', addedBy: 'peilin' },
                 { type: 'food', time: '11:15-12:15', location: 'Pa Lek Boat Noodles', notes: '大城必吃必比登船麵', addedBy: 'peilin' },
-                { type: 'spot', time: '12:30-13:45', location: '柴瓦塔那蘭寺', notes: '絕美高棉風格古蹟遺跡', addedBy: 'chunyen' },
-                { type: 'spot', time: '14:00-15:00', location: '瑪哈泰寺', notes: '看經典的樹中佛頭', addedBy: 'mom' },
+                { type: 'spot', time: '12:30-13:45', location: '柴瓦塔那蘭寺', notes: '絕美高棉風格古蹟遺跡', addedBy: 'peilin' },
+                { type: 'spot', time: '14:00-15:00', location: '瑪哈泰寺', notes: '看經典的樹中佛頭', addedBy: 'peilin' },
                 { type: 'transport', time: '約17:00', location: '返回曼谷', notes: '搭車回曼谷市區', addedBy: 'peilin' },
                 { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '續住', addedBy: 'peilin' }
             ],
             'day5': [
                 { type: 'spot', time: '08:00-12:00', location: '鄭王廟泰服 + 攝影體驗', notes: '穿著華麗泰服拍大片！', addedBy: 'peilin' },
-                { type: 'food', time: '12:00-13:30', location: 'NAMA 日料吃到飽 (午餐)', notes: '爽吃精緻高級日料', addedBy: 'chihjung' },
+                { type: 'food', time: '12:00-13:30', location: 'NAMA 日料吃到飽 (午餐)', notes: '爽吃精緻高級日料', addedBy: 'peilin' },
                 { type: 'hotel', time: '下午', location: '入住 Kimpton Maa-Lai Bangkok', notes: '辦理入住，享受頂級飯店設施、泳池、拍照', addedBy: 'peilin' },
-                { type: 'spot', time: '下午-晚上', location: '飯店休息', notes: '享受設施、耍廢充電', addedBy: 'mom' }
+                { type: 'spot', time: '下午-晚上', location: '飯店休息', notes: '享受設施、耍廢充電', addedBy: 'peilin' }
             ],
             'day6': [
                 { type: 'food', time: '08:00-10:00', location: 'Kimpton 早餐', notes: '品嚐超豐盛飯店早餐', addedBy: 'peilin' },
                 { type: 'hotel', time: '10:00-11:00', location: '整理行李 -> Check-out', notes: '換回 JASMINE 59 Hotel 續住', addedBy: 'peilin' },
-                { type: 'spot', time: '下午', location: 'ICONSIAM / 自由活動', notes: '逛室內水上市場、血拚', addedBy: 'mom' },
-                { type: 'food', time: '晚上', location: 'COOPER BUFFET 晚餐', notes: '豪華自助餐晚餐', addedBy: 'chunyen' }
+                { type: 'spot', time: '下午', location: 'ICONSIAM / 自由活動', notes: '逛室內水上市場、血拚', addedBy: 'peilin' },
+                { type: 'food', time: '晚上', location: 'COOPER BUFFET 晚餐', notes: '豪華自助餐晚餐', addedBy: 'peilin' }
             ],
             'day7': [
-                { type: 'flight', time: '清晨', location: '弟弟前往機場回台', notes: '志榮先回台灣囉！', addedBy: 'chihjung' },
+                { type: 'flight', time: '清晨', location: '弟弟前往機場回台', notes: '志榮先回台灣囉！', addedBy: 'peilin' },
                 { type: 'spot', time: '白天-晚上', location: '其餘成員自由活動', notes: '依照喜好安排按摩、購物或咖啡廳', addedBy: 'peilin' },
                 { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '續住', addedBy: 'peilin' }
             ],
@@ -205,7 +214,7 @@ html
             ],
             'day9': [
                 { type: 'spot', time: '白天', location: '自由活動', notes: '把握最後血拚與按摩機會', addedBy: 'peilin' },
-                { type: 'food', time: '傍晚-晚上', location: '昭披耶河景觀餐廳', notes: '看夕陽，享受曼谷最後的浪漫晚餐', addedBy: 'mom' },
+                { type: 'food', time: '傍晚-晚上', location: '昭披耶河景觀餐廳', notes: '看夕陽，享受曼谷最後的浪漫晚餐', addedBy: 'peilin' },
                 { type: 'hotel', time: '晚上', location: 'JASMINE 59 Hotel', notes: '最後一晚！整理戰利品！', addedBy: 'peilin' }
             ],
             'day10': [
@@ -239,9 +248,9 @@ html
                         if (snapshot.exists()) {
                             const data = snapshot.data();
                             
-                            // 🚨 強制更新救援機制：偵測到雲端資料若沒有 10 天，強制用最新的 10 天覆蓋它！
-                            if (!data.itinerary || !data.itinerary['day10']) {
-                                console.log("偵測到雲端為舊版資料，執行強制更新至 10 天行程！");
+                            // 🚨 強制更新救援機制 (Version 2)：確保「權限修正為貝琳」寫入雲端！
+                            if (!data.version || data.version < 2) {
+                                console.log("偵測到雲端為舊版資料，執行強制更新 (版本2)！");
                                 state.itinerary = initialItineraryData; 
                                 state.checklist = data.checklist || defaultChecklist;
                                 state.memories = data.memories || []; 
@@ -275,7 +284,17 @@ html
             if (!window.auth || !window.auth.currentUser || !window.db || !state.isDataLoaded) return;
             state.syncStatus = 'syncing'; window.renderDOM();
             try {
-                await setDoc(doc(window.db, 'bangkok_trip', 'shared_data'), { itinerary: state.itinerary, checklist: state.checklist, memories: state.memories, expenses: state.expenses, wishes: state.wishes, diaries: state.diaries, exchangeRate: state.exchangeRate, shoppingList: state.shoppingList });
+                await setDoc(doc(window.db, 'bangkok_trip', 'shared_data'), { 
+                    itinerary: state.itinerary, 
+                    checklist: state.checklist, 
+                    memories: state.memories, 
+                    expenses: state.expenses, 
+                    wishes: state.wishes, 
+                    diaries: state.diaries, 
+                    exchangeRate: state.exchangeRate, 
+                    shoppingList: state.shoppingList,
+                    version: 2 // 寫入版本號，避免無限循環
+                });
                 state.syncStatus = 'synced'; window.renderDOM();
             } catch (e) { state.syncStatus = 'error'; window.renderDOM(); }
         };
@@ -312,9 +331,9 @@ html
             if (t.includes('洽圖洽') || t.includes('chatuchak')) return '洽圖洽有超過一萬五千個攤位！推薦去吃椰子冰淇淋、買香氛和編織包，記得帶夠現金喔！🥥🛍️';
             if (t.includes('遊船') || t.includes('cruise') || t.includes('白蘭花')) return '白蘭花遊船不僅有超豐盛的 Buffet，還有超嗨的現場演出！在甲板上吹風看鄭王廟夜景超浪漫！🚢💃';
             if (t.includes('鐵道') || t.includes('美功')) return '美功鐵道市場最狂的就是看火車貼著菜攤開過去！09:00那班一定要卡好位錄影，超震撼的啦！🚂⛺';
-            if (t.includes('bubble')) return '傳說中的曼谷小馬爾地夫！記得穿最仙的洋裝，坐在水上漂浮包廂拍照，不用濾鏡就美翻天！☕🏝️';
+            if (t.includes('bubble')) return '這家水上咖啡廳超美！像是來到小馬爾地夫一樣，可以拍出超仙的美照！☕🏝️';
             if (t.includes('水上市場') || t.includes('空叻瑪榮')) return '空叻瑪榮水上市場超在地！一定要吃烤魚、烤大頭蝦，搭著手搖船買東西就是最道地的體驗！🛶🦐';
-            if (t.includes('吞武里')) return '吞武里海鮮市場根本是海鮮控天堂！現挑現烤，那個烤龍蝦的香味...小象我的口水都要流下來了！🦞🤤';
+            if (t.includes('吞武里')) return '曼谷超有名的海鮮市場！蝦子螃蟹跟手一樣大，價格又划算，吃得超滿足！🦞🤤';
             if (t.includes('動物園') || t.includes('獅子王')) return '大城動物園可以站在吉普車上跟長頸鹿貼貼！牠們的舌頭真的好長呀哈！記得多買幾盆紅蘿蔔餵牠們喔！🦒📸';
             if (t.includes('船麵') || t.includes('boat noodle') || t.includes('pa lek')) return 'Pa Lek 船麵是米其林必比登推薦！湯頭濃郁帶點中藥香，一碗只要幾十泰銖，直接疊起10個空碗吧！🍜🐘';
             if (t.includes('柴瓦塔那蘭寺')) return '這裡是《天生一對》的拍攝地！夕陽西下時的高棉風格佛塔剪影，美到讓人屏息！🌅🛕';
@@ -539,6 +558,7 @@ html
                     <div class="px-5 mt-4 animate-fadeIn">
                         ${toggleHtml}
                         <div class="glass-card rounded-[2.5rem] p-6 shadow-md relative overflow-hidden min-h-[400px]">
+                            <img src="${CUSTOM_IMAGES.watermarks.photo}" class="watermark w-48 -bottom-4 -right-4" />
                             <div class="flex justify-between items-center mb-6 relative z-10">
                                 <h2 class="font-black text-xl text-rose-500 flex items-center gap-2"><i data-lucide="camera" class="w-6 h-6"></i> 雲端拍立得</h2>
                                 ${!isGuest ? `<button onclick="window.triggerPhotoUpload()" class="bg-gradient-to-r from-rose-400 to-pink-500 text-white px-4 py-2 rounded-full font-black text-sm shadow-sm active:scale-95 flex items-center gap-1.5 border border-rose-400"><i data-lucide="plus" class="w-4 h-4"></i> 新增</button>
@@ -581,6 +601,7 @@ html
                     <div class="px-5 mt-4 animate-fadeIn">
                         ${toggleHtml}
                         <div class="glass-card rounded-[2.5rem] p-6 shadow-md relative overflow-hidden min-h-[400px]">
+                            <img src="${CUSTOM_IMAGES.watermarks.diary}" class="watermark w-56 -bottom-6 -left-6" style="transform: scaleX(-1);" />
                             <div class="relative z-10 mb-6">
                                 <h2 class="font-black text-xl text-rose-500 flex items-center gap-2 mb-4"><i data-lucide="book-heart" class="w-6 h-6"></i> 交換日記</h2>
                                 ${!isGuest ? `
@@ -619,9 +640,8 @@ html
                               `<div class="flex items-center gap-1.5 mt-0.5"><div class="text-[22px] drop-shadow-sm flex items-center">${w.icon}</div><span class="font-black text-[#4A3B32] text-[15px]">${w.min}°-${w.max}°C</span></div>`;
             if (!w) setTimeout(() => window.fetchWeather(state.activeDay), 0);
             
-            // 每個 Day 不同的浮水印
-            const currentDayIndex = parseInt(state.activeDay.replace('day', '')) - 1;
-            const currentWatermark = dayIcons[currentDayIndex % dayIcons.length];
+            // 計算這是第幾天 (0~9)
+            const currentDayNum = parseInt(state.activeDay.replace('day', '')) - 1;
 
             let listHtml = currentItinerary.length === 0 ? `<div class="text-center py-10 text-orange-400 font-bold relative z-10"><p>這天還沒有行程喔！</p>${!isGuest?'<p class="text-sm opacity-60 mt-1">點擊下方按鈕加入新行程吧！</p>':''}</div>` :
                 currentItinerary.map((item, idx) => {
@@ -633,12 +653,15 @@ html
 
                     const p = userProfiles[item.addedBy] || userProfiles['peilin'];
                     const aiContent = getAIGuide(item.location, item.notes);
+                    
+                    // 從 35 個圖庫中，為每一個景點挑選不重複的浮水印 (天數*10 + 景點index)
+                    const itemWatermark = allItemWatermarks[(currentDayNum * 10 + idx) % allItemWatermarks.length];
 
                     return `
                         <div class="relative z-10 mb-8 last:mb-0 group animate-fadeIn" style="animation-delay: ${idx*0.05}s">
                             <div class="absolute -left-10 top-5 w-4 h-4 rounded-full border-[3px] shadow-sm z-20 ${theme.node} border-white ring-4 ring-white/50 group-hover:scale-110 transition-transform"></div>
                             <div class="glass-card rounded-[2rem] p-5 shadow-sm relative overflow-hidden transition-all duration-300 border-orange-100/50 hover:shadow-md">
-                                <img src="${currentWatermark}" class="watermark w-40 -bottom-4 -right-4 -rotate-12" />
+                                <img src="${itemWatermark}" class="watermark w-40 -bottom-4 -right-4 -rotate-12" />
                                 <div class="flex justify-between items-center mb-4 relative z-10">
                                     <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white bg-gradient-to-r ${theme.pill} shadow-sm border border-white/50">
                                         ${theme.icon}<span class="text-[11px] font-black tracking-widest">${theme.label} · ${escapeHTML(item.time)}</span>
@@ -721,7 +744,6 @@ html
             return `
                 <div class="px-5 mt-4 space-y-6 animate-fadeIn">
                     <div class="glass-card rounded-[2.5rem] p-8 text-center shadow-md relative overflow-hidden">
-                        <img src="${CUSTOM_IMAGES.watermarks.tool}" class="watermark w-56 -bottom-2 -right-2" />
                         <div class="relative z-10">
                             <div class="w-32 h-32 mx-auto mb-4"><img src="${CUSTOM_IMAGES.exchangeIcon}" class="w-full h-full object-contain drop-shadow-lg" /></div>
                             <h3 class="font-black text-xl mb-6 text-[#4A3B32] flex items-center justify-center gap-2"><img src="${CUSTOM_IMAGES.moneyGoneIcon}" class="h-8 w-auto drop-shadow-sm" /> 泰銖換算</h3>
@@ -747,6 +769,7 @@ html
                     </div>
 
                     <div class="glass-card rounded-[2.5rem] p-8 text-center shadow-md relative overflow-hidden">
+                        <img src="${CUSTOM_IMAGES.watermarks.tool}" class="watermark w-48 -bottom-6 -right-6" />
                         <div class="relative z-10">
                             <h3 class="font-black text-xl mb-3 text-[#4A3B32] flex items-center justify-center gap-2"><i data-lucide="utensils" class="w-6 h-6 text-orange-500"></i>晚餐吃什麼轉盤</h3>
                             <p class="text-xs font-bold text-[#4A3B32]/60 mb-6">交給命運來決定下一餐吧！</p>
@@ -872,6 +895,7 @@ html
                     <div class="px-5 mt-4 animate-fadeIn">
                         ${toggleHtml}
                         <div class="glass-card rounded-[2.5rem] p-6 shadow-md relative overflow-hidden min-h-[300px]">
+                            <img src="${CUSTOM_IMAGES.watermarks.shop}" class="watermark w-48 -bottom-6 -right-6" />
                             
                             <div class="absolute -right-10 -top-10 w-32 h-32 bg-orange-300/20 rounded-full blur-2xl z-0 pointer-events-none"></div>
 
