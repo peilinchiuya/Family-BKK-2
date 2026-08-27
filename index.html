@@ -86,7 +86,7 @@ html
             appId: "1:144110237020:web:7d8dc8500974a265c67d99"
         };
 
-        // 🖼️ 2. 主題背景與各單元專屬圖庫
+        // 🖼️ 2. 不重複的圖示與浮水印替換區
         const CUSTOM_IMAGES = {
             banner: 'https://duk.tw/3RaJj4.png', 
             exchangeIcon: 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png', 
@@ -106,7 +106,6 @@ html
             }
         };
 
-        // 35個不重複的圖庫，供每日景點卡片輪流替換使用
         const allItemWatermarks = [
             'https://duk.tw/AkIwAZ.png', 'https://duk.tw/ySG17n.png', 'https://duk.tw/BzOgWV.png', 'https://duk.tw/0JZFA4.png', 
             'https://duk.tw/euSpN0.png', 'https://duk.tw/0c00Vb.png', 'https://duk.tw/VCm6aX.png', 'https://duk.tw/ENOjBT.png', 
@@ -119,11 +118,48 @@ html
             'https://duk.tw/KG8d0F.png', 'https://duk.tw/z76SKW.png', 'https://duk.tw/31gOg1.png'
         ];
 
-        // 10 天專屬上方頁籤小圖示
         const dayIcons = [ 
             'https://duk.tw/sZr9Vf.png', 'https://duk.tw/qTqGJf.png', 'https://duk.tw/IWMz4L.png', 'https://duk.tw/Of6y5G.png', 
             'https://duk.tw/Flf3Ad.png', 'https://duk.tw/W77EfE.png', 'https://duk.tw/XJQK66.png', 'https://duk.tw/5DOXfD.png',
             'https://duk.tw/puESqp.png', 'https://duk.tw/tYKkTE.png' 
+        ];
+
+        // ✨ 你的私藏口袋名單 (Google Maps 連結與資料)
+        const pocketList = {
+            food: [
+                { name: '建興酒家 Somboon Seafood', link: 'https://maps.app.goo.gl/ggLrCSZ1HrJvYby59?g_st=i', type: 'food' },
+                { name: 'Bubble in the Forest Cafe', link: 'https://maps.app.goo.gl/ggLrCSZ1HrJvYby59?g_st=i', type: 'food' },
+                { name: 'Pa Lek Boat Noodles', link: 'https://maps.app.goo.gl/ggLrCSZ1HrJvYby59?g_st=i', type: 'food' },
+                { name: '吞武里海鮮市場', link: 'https://maps.app.goo.gl/ggLrCSZ1HrJvYby59?g_st=i', type: 'food' },
+                { name: 'NAMA 日料吃到飽', link: 'https://maps.app.goo.gl/ggLrCSZ1HrJvYby59?g_st=i', type: 'food' },
+                { name: '白蘭花遊船 (晚餐)', link: 'https://maps.app.goo.gl/ggLrCSZ1HrJvYby59?g_st=i', type: 'food' },
+                { name: '昭披耶河景觀餐廳', link: 'https://maps.app.goo.gl/ggLrCSZ1HrJvYby59?g_st=i', type: 'food' }
+            ],
+            shop: [
+                { name: '喬德夜市 JODD FAIRS', link: 'https://maps.app.goo.gl/8gqtn6mCByRFx2qn6?g_st=i', type: 'spot' },
+                { name: '洽圖洽週末市集', link: 'https://maps.app.goo.gl/8gqtn6mCByRFx2qn6?g_st=i', type: 'spot' },
+                { name: 'ICONSIAM', link: 'https://maps.app.goo.gl/8gqtn6mCByRFx2qn6?g_st=i', type: 'spot' },
+                { name: '美功鐵道市場', link: 'https://maps.app.goo.gl/8gqtn6mCByRFx2qn6?g_st=i', type: 'spot' },
+                { name: '空叻瑪榮水上市場', link: 'https://maps.app.goo.gl/8gqtn6mCByRFx2qn6?g_st=i', type: 'spot' },
+                { name: '鄭王廟泰服體驗', link: 'https://maps.app.goo.gl/8gqtn6mCByRFx2qn6?g_st=i', type: 'spot' },
+                { name: '香氛店與商場採買', link: 'https://maps.app.goo.gl/8gqtn6mCByRFx2qn6?g_st=i', type: 'spot' }
+            ],
+            massage: [
+                { name: 'Nikko Thai Massage 5', link: 'https://maps.app.goo.gl/iirgxJv3yiiPZUFY9?g_st=i', type: 'spot' },
+                { name: 'Let\'s Relax Spa', link: 'https://maps.app.goo.gl/iirgxJv3yiiPZUFY9?g_st=i', type: 'spot' },
+                { name: 'Health Land', link: 'https://maps.app.goo.gl/iirgxJv3yiiPZUFY9?g_st=i', type: 'spot' },
+                { name: 'Asia Herb Association', link: 'https://maps.app.goo.gl/iirgxJv3yiiPZUFY9?g_st=i', type: 'spot' }
+            ]
+        };
+
+        // 🇹🇭 泰國求生字卡
+        const survivalCards = [
+            { th: 'ไม่เผ็ด', ch: '不要辣', pron: 'Mai Phed', icon: '🌶️' },
+            { th: 'ไม่ใส่ผักชี', ch: '不加香菜', pron: 'Mai Sai Pak Chi', icon: '🌿' },
+            { th: 'กดมิเตอร์ด้วย', ch: '請跳錶', pron: 'Meter Please', icon: '🚕' },
+            { th: 'ลดหน่อยได้ไหม', ch: '可以便宜一點嗎', pron: 'Lod Noi Dai Mai', icon: '💸' },
+            { th: 'ห้องน้ำอยู่ที่ไหน', ch: '洗手間在哪裡', pron: 'Hong Nam Yu Thi Nai', icon: '🚽' },
+            { th: 'ขอบคุณครับ/ค่ะ', ch: '謝謝', pron: 'Khob Khun', icon: '🙏' }
         ];
         
         const CustomIcons = { Utensils: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`, Copy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`, Bag: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>` };
@@ -223,15 +259,16 @@ html
             ]
         };
 
-        const defaultChecklist = [ { id: 1, text: "護照、泰銖與信用卡", checked: false, assignee: 'all' }, { id: 2, text: "簽證/電子簽", checked: false, assignee: 'all' }, { id: 3, text: "泰國上網 SIM 卡", checked: false, assignee: 'peilin' }, { id: 4, text: "腸胃藥、防蚊液", checked: false, assignee: 'mom' }, { id: 5, text: "隨身小電風扇、薄外套", checked: false, assignee: 'chunyen' } ];
+        const defaultChecklist = [ { id: 1, text: "護照、泰銖與信用卡", checked: false, assignee: 'all' }, { id: 2, text: "簽證/電子簽", checked: false, assignee: 'all' }, { id: 3, text: "泰國上網 SIM 卡", checked: false, assignee: 'peilin' }, { id: 4, text: "腸胃藥、防蚊液", checked: false, assignee: 'peilin' }, { id: 5, text: "隨身小電風扇、薄外套", checked: false, assignee: 'peilin' } ];
 
         const state = {
             currentUser: null, 
             isDataLoaded: false,
             activeTab: 'itinerary', activeDay: 'day1', activeChecklistTab: 'all', activeListMode: 'checklist', activeMemoryMode: 'photo', wishCategory: 'food', diaryMood: '🥰', 
+            pocketTab: 'food', cardModal: { isOpen: false, th: '', ch: '', pron: '', icon: '' },
             jpyInput: 1000, exchangeRate: 0.9, isEditingRate: false, copied: false, gachaResult: null, gachaAnimating: false, isFortuneDrawing: false, fortuneResult: null, 
             syncStatus: 'syncing', memories: [], itinerary: initialItineraryData, checklist: defaultChecklist, expenses: [], wishes: [], diaries: [], shoppingList: [],
-            modalConfig: { isOpen: false, isEdit: false, dayId: '', index: null }, expenseModal: { isOpen: false, description: '', amount: '', currency: 'THB' }, shoppingModal: { isOpen: false, isEdit: false, id: null, name: '', price: '', image: null }, imageViewer: { isOpen: false, src: '' }, formData: { type: 'spot', time: '10:00-12:00', location: '', notes: '', detail: '', highlights: '' }, deleteConfirm: { isOpen: false, dayId: '', index: null, location: '' }, showUserSelect: true, uploadingItineraryPhoto: { dayId: null, idx: null }, isTabSwitch: true, needsScrollCenter: true, lastDaysScroll: 0
+            modalConfig: { isOpen: false, isEdit: false, dayId: '', index: null }, expenseModal: { isOpen: false, description: '', amount: '', currency: 'THB' }, shoppingModal: { isOpen: false, isEdit: false, id: null, name: '', price: '', image: null }, imageViewer: { isOpen: false, src: '' }, formData: { type: 'spot', time: '', location: '', notes: '', detail: '', highlights: '' }, deleteConfirm: { isOpen: false, dayId: '', index: null, location: '' }, showUserSelect: true, uploadingItineraryPhoto: { dayId: null, idx: null }, isTabSwitch: true, needsScrollCenter: true, lastDaysScroll: 0
         };
         window.state = state; 
 
@@ -248,9 +285,9 @@ html
                         if (snapshot.exists()) {
                             const data = snapshot.data();
                             
-                            // 🚨 強制更新救援機制 (Version 2)：確保「權限修正為貝琳」寫入雲端！
-                            if (!data.version || data.version < 2) {
-                                console.log("偵測到雲端為舊版資料，執行強制更新 (版本2)！");
+                            // 🚨 強制更新救援機制 (Version 3)：確保新增功能與修正寫入雲端！
+                            if (!data.version || data.version < 3) {
+                                console.log("偵測到雲端為舊版資料，執行強制更新 (版本3)！");
                                 state.itinerary = initialItineraryData; 
                                 state.checklist = data.checklist || defaultChecklist;
                                 state.memories = data.memories || []; 
@@ -293,7 +330,7 @@ html
                     diaries: state.diaries, 
                     exchangeRate: state.exchangeRate, 
                     shoppingList: state.shoppingList,
-                    version: 2 // 寫入版本號，避免無限循環
+                    version: 3 
                 });
                 state.syncStatus = 'synced'; window.renderDOM();
             } catch (e) { state.syncStatus = 'error'; window.renderDOM(); }
@@ -330,7 +367,7 @@ html
             if (t.includes('回台')) return '中華航空準備帶大家回溫暖的台灣囉！這趟 10 天的旅程是不是超棒的？期待下次再一起出遊！✈️🇹🇭';
             if (t.includes('洽圖洽') || t.includes('chatuchak')) return '洽圖洽有超過一萬五千個攤位！推薦去吃椰子冰淇淋、買香氛和編織包，記得帶夠現金喔！🥥🛍️';
             if (t.includes('遊船') || t.includes('cruise') || t.includes('白蘭花')) return '白蘭花遊船不僅有超豐盛的 Buffet，還有超嗨的現場演出！在甲板上吹風看鄭王廟夜景超浪漫！🚢💃';
-            if (t.includes('鐵道') || t.includes('美功')) return '美功鐵道市場最狂的就是看火車貼著菜攤開過去！09:00那班一定要卡好位錄影，超震撼的啦！🚂⛺';
+            if (t.includes('鐵道') || t.includes('美功')) return '火車來了！看攤販一秒收帳篷超級神奇的！要記得拿好相機捕捉這瞬間喔！🚂⛺';
             if (t.includes('bubble')) return '這家水上咖啡廳超美！像是來到小馬爾地夫一樣，可以拍出超仙的美照！☕🏝️';
             if (t.includes('水上市場') || t.includes('空叻瑪榮')) return '空叻瑪榮水上市場超在地！一定要吃烤魚、烤大頭蝦，搭著手搖船買東西就是最道地的體驗！🛶🦐';
             if (t.includes('吞武里')) return '曼谷超有名的海鮮市場！蝦子螃蟹跟手一樣大，價格又划算，吃得超滿足！🦞🤤';
@@ -640,7 +677,7 @@ html
                               `<div class="flex items-center gap-1.5 mt-0.5"><div class="text-[22px] drop-shadow-sm flex items-center">${w.icon}</div><span class="font-black text-[#4A3B32] text-[15px]">${w.min}°-${w.max}°C</span></div>`;
             if (!w) setTimeout(() => window.fetchWeather(state.activeDay), 0);
             
-            // 計算這是第幾天 (0~9)
+            // 計算這是第幾天 (0~9) 供不重複浮水印使用
             const currentDayNum = parseInt(state.activeDay.replace('day', '')) - 1;
 
             let listHtml = currentItinerary.length === 0 ? `<div class="text-center py-10 text-orange-400 font-bold relative z-10"><p>這天還沒有行程喔！</p>${!isGuest?'<p class="text-sm opacity-60 mt-1">點擊下方按鈕加入新行程吧！</p>':''}</div>` :
@@ -654,14 +691,19 @@ html
                     const p = userProfiles[item.addedBy] || userProfiles['peilin'];
                     const aiContent = getAIGuide(item.location, item.notes);
                     
-                    // 從 35 個圖庫中，為每一個景點挑選不重複的浮水印 (天數*10 + 景點index)
+                    // 🚨 寺廟服裝自動警告機制
+                    const templeKws = ['鄭王廟', '柴瓦塔那蘭', '瑪哈泰', '寺', '廟', 'Wat'];
+                    const isTemple = templeKws.some(kw => item.location.includes(kw));
+                    const templeWarning = isTemple ? `<div class="bg-red-50 text-red-500 border border-red-200 text-[11px] font-black px-3 py-2 rounded-xl mb-3 flex items-center gap-1.5 shadow-sm"><i data-lucide="alert-triangle" class="w-4 h-4"></i>服裝注意：此為寺廟景點，請勿穿著無袖、短褲、短裙喔！</div>` : '';
+                    
+                    // 從 35 個圖庫中，為每一個景點挑選不重複的浮水印
                     const itemWatermark = allItemWatermarks[(currentDayNum * 10 + idx) % allItemWatermarks.length];
 
                     return `
                         <div class="relative z-10 mb-8 last:mb-0 group animate-fadeIn" style="animation-delay: ${idx*0.05}s">
                             <div class="absolute -left-10 top-5 w-4 h-4 rounded-full border-[3px] shadow-sm z-20 ${theme.node} border-white ring-4 ring-white/50 group-hover:scale-110 transition-transform"></div>
                             <div class="glass-card rounded-[2rem] p-5 shadow-sm relative overflow-hidden transition-all duration-300 border-orange-100/50 hover:shadow-md">
-                                <img src="${itemWatermark}" class="watermark w-40 -bottom-4 -right-4 -rotate-12" />
+                                <img src="${itemWatermark}" class="watermark w-40 -bottom-4 -right-4 -rotate-12 opacity-[0.15]" />
                                 <div class="flex justify-between items-center mb-4 relative z-10">
                                     <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white bg-gradient-to-r ${theme.pill} shadow-sm border border-white/50">
                                         ${theme.icon}<span class="text-[11px] font-black tracking-widest">${theme.label} · ${escapeHTML(item.time)}</span>
@@ -670,6 +712,7 @@ html
                                 </div>
                                 <h3 class="text-[22px] font-black leading-tight mb-4 ${theme.text} relative z-10 tracking-wide">${escapeHTML(item.location)}</h3>
                                 <div class="bg-white/90 border border-orange-50 rounded-[1.5rem] p-4 mb-4 shadow-sm relative z-10">
+                                    ${templeWarning}
                                     ${item.detail ? `<div class="flex items-center gap-2.5 text-orange-600 font-black text-sm mb-3"><i data-lucide="ticket" class="w-4 h-4 text-orange-400"></i>${escapeHTML(item.detail)}</div>` : ''}
                                     <div class="flex items-start gap-2.5 text-[#4A3B32]/80 text-[13px] font-bold leading-relaxed whitespace-pre-line"><i data-lucide="pencil-line" class="w-4 h-4 text-orange-300 shrink-0 mt-0.5"></i><span>${escapeHTML(item.notes)}</span></div>
                                     
@@ -728,7 +771,7 @@ html
                     <div class="relative pl-10 pb-8 mt-4">
                         <div class="absolute top-4 bottom-8 left-[17px] w-0 border-l-[3px] border-dotted border-orange-200 z-0"></div>
                         ${listHtml}
-                        ${!isGuest ? `<button onclick="window.openAddModal()" class="w-full mt-4 flex items-center justify-center gap-2 py-4 border-[3px] border-dashed border-orange-200 rounded-[2rem] text-orange-500 font-black hover:bg-orange-50 active:scale-95 shadow-sm bg-white/80 relative z-10 animate-fadeIn"><i data-lucide="plus" class="w-5 h-5"></i> 新增曼谷行程</button>` : ''}
+                        ${!isGuest ? `<button onclick="window.openAddModalPrefilled('', 'spot')" class="w-full mt-4 flex items-center justify-center gap-2 py-4 border-[3px] border-dashed border-orange-200 rounded-[2rem] text-orange-500 font-black hover:bg-orange-50 active:scale-95 shadow-sm bg-white/80 relative z-10 animate-fadeIn"><i data-lucide="plus" class="w-5 h-5"></i> 新增曼谷行程</button>` : ''}
                     </div>
                 </div>
             `;
@@ -741,52 +784,97 @@ html
                 `<input type="number" step="0.001" value="${state.exchangeRate}" onchange="window.updateRateValue(this.value)" onblur="window.toggleRateEdit(false)" autofocus class="w-20 bg-white border border-orange-200 rounded px-2 py-0.5 text-base font-black text-orange-500 text-center outline-none shadow-inner" />` : 
                 `<button ${!isGuest ? 'onclick="window.toggleRateEdit(true)"' : 'disabled'} class="flex items-center gap-1 text-xs font-black text-orange-500 bg-white/80 px-3 py-1 rounded-full border border-white shadow-sm ${!isGuest?'hover:bg-white':''}">${state.exchangeRate} ${!isGuest?'<i data-lucide="edit" class="w-3 h-3"></i>':''}</button>`;
 
+            const activePocket = pocketList[state.pocketTab];
+            let pocketHtml = activePocket.map(item => `
+                <div class="flex items-center justify-between py-2 border-b border-orange-50 last:border-0 hover:bg-orange-50/50 transition-colors">
+                    <span class="font-bold text-[13px] text-[#4A3B32] truncate pr-2">${item.name}</span>
+                    <div class="flex gap-2 shrink-0">
+                        <a href="${item.link}" target="_blank" class="w-7 h-7 flex items-center justify-center bg-sky-50 text-sky-500 rounded-full shadow-sm hover:scale-105 active:scale-95"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i></a>
+                        ${!isGuest ? `<button onclick="window.openAddModalPrefilled('${item.name}', '${item.type}')" class="w-7 h-7 flex items-center justify-center bg-orange-100 text-orange-500 rounded-full shadow-sm hover:scale-105 active:scale-95"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            let cardsHtml = survivalCards.map((c, i) => `
+                <button onclick="window.openCardModal('${c.th}', '${c.ch}', '${c.pron}', '${c.icon}')" class="shrink-0 w-[105px] p-3 bg-white/90 border border-orange-100 rounded-[1.5rem] shadow-sm text-center active:scale-95 hover:-translate-y-1 transition-all">
+                    <div class="text-2xl mb-1">${c.icon}</div>
+                    <div class="font-black text-[12px] text-[#4A3B32] mb-0.5 truncate">${c.ch}</div>
+                    <div class="text-[9px] font-bold text-gray-400 truncate">${c.pron}</div>
+                </button>
+            `).join('');
+
             return `
                 <div class="px-5 mt-4 space-y-6 animate-fadeIn">
+                    
+                    <!-- 1. 口袋名單與聯動轉盤 -->
+                    <div class="glass-card rounded-[2.5rem] p-6 shadow-md relative overflow-hidden">
+                        <img src="${CUSTOM_IMAGES.watermarks.tool}" class="watermark w-48 -bottom-6 -right-6" />
+                        <div class="relative z-10">
+                            <h3 class="font-black text-[18px] mb-1 text-[#4A3B32] flex items-center justify-center gap-2"><i data-lucide="star" class="w-5 h-5 text-orange-500"></i>曼谷寶藏口袋名單</h3>
+                            <p class="text-[11px] font-bold text-[#4A3B32]/60 mb-4 text-center">不知道去哪？點＋號直接排進行程！</p>
+                            
+                            <div class="flex bg-white/80 p-1.5 rounded-full mb-4 shadow-inner border border-orange-50">
+                                <button onclick="window.switchPocketTab('food')" class="flex-1 py-1.5 rounded-full font-black text-xs transition-all flex items-center justify-center gap-1 ${state.pocketTab === 'food' ? 'bg-orange-400 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}">🥭 美食</button>
+                                <button onclick="window.switchPocketTab('shop')" class="flex-1 py-1.5 rounded-full font-black text-xs transition-all flex items-center justify-center gap-1 ${state.pocketTab === 'shop' ? 'bg-orange-400 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}">🛍️ 逛街</button>
+                                <button onclick="window.switchPocketTab('massage')" class="flex-1 py-1.5 rounded-full font-black text-xs transition-all flex items-center justify-center gap-1 ${state.pocketTab === 'massage' ? 'bg-orange-400 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}">💆‍♀️ 按摩</button>
+                            </div>
+
+                            <div class="bg-white/90 border border-orange-50 rounded-2xl p-3 mb-4 shadow-inner max-h-[160px] overflow-y-auto">
+                                ${pocketHtml}
+                            </div>
+                            
+                            <div class="bg-orange-50/80 border border-orange-100 rounded-[1.5rem] p-4 mb-4 h-[80px] flex items-center justify-center shadow-inner text-center">
+                                <span class="text-[18px] font-black text-orange-600 ${state.gachaAnimating ? 'animate-pulse' : ''}">${state.gachaResult || '❓ 選擇困難就點下面 ❓'}</span>
+                            </div>
+                            <button onclick="window.playPocketGacha()" class="w-full bg-gradient-to-r from-orange-400 to-red-400 text-white font-black text-[15px] py-3.5 rounded-[1.5rem] shadow-md active:scale-95 flex items-center justify-center gap-2 border border-orange-400">
+                                ${state.gachaAnimating ? '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 小象思考中...' : '🎲 幫我從名單抽一個！'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. 泰國求生溝通字卡 -->
+                    <div class="glass-card rounded-[2.5rem] p-6 shadow-md relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h3 class="font-black text-[18px] mb-1 text-[#4A3B32] flex items-center gap-2"><i data-lucide="message-square" class="w-5 h-5 text-sky-500"></i>泰國求生溝通字卡</h3>
+                            <p class="text-[11px] font-bold text-[#4A3B32]/60 mb-4">點擊卡片全螢幕放大，直接秀給當地人看！</p>
+                            <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2 px-2 -mx-2">
+                                ${cardsHtml}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 匯率換算 -->
                     <div class="glass-card rounded-[2.5rem] p-8 text-center shadow-md relative overflow-hidden">
                         <div class="relative z-10">
-                            <div class="w-32 h-32 mx-auto mb-4"><img src="${CUSTOM_IMAGES.exchangeIcon}" class="w-full h-full object-contain drop-shadow-lg" /></div>
-                            <h3 class="font-black text-xl mb-6 text-[#4A3B32] flex items-center justify-center gap-2"><img src="${CUSTOM_IMAGES.moneyGoneIcon}" class="h-8 w-auto drop-shadow-sm" /> 泰銖換算</h3>
-                            <div class="flex justify-center items-center gap-2 mb-6"><span class="text-[10px] font-bold text-[#4A3B32]/70">目前匯率：</span>${rateInputHtml}</div>
+                            <div class="w-24 h-24 mx-auto mb-4"><img src="${CUSTOM_IMAGES.exchangeIcon}" class="w-full h-full object-contain drop-shadow-lg" /></div>
+                            <h3 class="font-black text-[18px] mb-6 text-[#4A3B32] flex items-center justify-center gap-2"><img src="${CUSTOM_IMAGES.moneyGoneIcon}" class="h-6 w-auto drop-shadow-sm" /> 泰銖換算</h3>
+                            <div class="flex justify-center items-center gap-2 mb-5"><span class="text-[10px] font-bold text-[#4A3B32]/70">目前匯率：</span>${rateInputHtml}</div>
                             <div class="flex justify-center gap-2 mb-4">
-                                ${[100, 500, 1000].map(amt => `<button onclick="window.updateJpy(${amt})" class="bg-white/80 border border-white shadow-sm text-[#4A3B32] text-[11px] font-black py-2 px-4 rounded-full active:scale-95">฿${amt.toLocaleString()}</button>`).join('')}
+                                ${[100, 500, 1000].map(amt => `<button onclick="window.updateJpy(${amt})" class="bg-white/80 border border-white shadow-sm text-[#4A3B32] text-[11px] font-black py-1.5 px-3 rounded-full active:scale-95">฿${amt.toLocaleString()}</button>`).join('')}
                             </div>
                             <div class="space-y-4">
                                 <div class="relative">
                                     <span class="absolute left-5 top-1/2 -translate-y-1/2 font-black text-[#4A3B32]/50 text-lg">THB ฿</span>
-                                    <input type="number" id="jpy-input" value="${state.jpyInput}" oninput="window.handleJpyInput(this.value)" class="w-full bg-white/80 border border-white rounded-[1.8rem] py-4 pl-24 pr-6 text-xl font-black outline-none focus:border-orange-300 text-right text-[#4A3B32] shadow-inner" />
+                                    <input type="number" id="jpy-input" value="${state.jpyInput}" oninput="window.handleJpyInput(this.value)" class="w-full bg-white/80 border border-white rounded-[1.8rem] py-3.5 pl-24 pr-6 text-xl font-black outline-none focus:border-orange-300 text-right text-[#4A3B32] shadow-inner" />
                                 </div>
-                                <div class="py-2 flex justify-center text-3xl text-orange-300">⬇</div>
-                                <div class="bg-gradient-to-br from-orange-50 to-white/90 border border-white p-6 rounded-[2rem] shadow-sm relative">
+                                <div class="py-1 flex justify-center text-2xl text-orange-300">⬇</div>
+                                <div class="bg-gradient-to-br from-orange-50 to-white/90 border border-white p-5 rounded-[2rem] shadow-sm relative">
                                     <div class="text-[10px] font-black text-orange-600/70 uppercase tracking-[0.2em] mb-1">大約等於</div>
-                                    <span class="text-3xl font-black tracking-tighter text-[#4A3B32]" id="twd-result-text">NT$ ${twdResult}</span>
-                                    <button onclick="window.copyToClipboard()" class="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black border border-white shadow-sm ${state.copied ? 'bg-green-100/90 text-green-600 border-green-200' : 'bg-white/90 text-[#4A3B32]/60 hover:bg-white'}">
-                                        ${state.copied ? '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> 已複製' : CustomIcons.Copy + ' 複製'}
+                                    <span class="text-2xl font-black tracking-tighter text-[#4A3B32]" id="twd-result-text">NT$ ${twdResult}</span>
+                                    <button onclick="window.copyToClipboard()" class="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-black border border-white shadow-sm ${state.copied ? 'bg-green-100/90 text-green-600 border-green-200' : 'bg-white/90 text-[#4A3B32]/60 hover:bg-white'}">
+                                        ${state.copied ? '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i>' : CustomIcons.Copy}
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-[2.5rem] p-8 text-center shadow-md relative overflow-hidden">
-                        <img src="${CUSTOM_IMAGES.watermarks.tool}" class="watermark w-48 -bottom-6 -right-6" />
-                        <div class="relative z-10">
-                            <h3 class="font-black text-xl mb-3 text-[#4A3B32] flex items-center justify-center gap-2"><i data-lucide="utensils" class="w-6 h-6 text-orange-500"></i>晚餐吃什麼轉盤</h3>
-                            <p class="text-xs font-bold text-[#4A3B32]/60 mb-6">交給命運來決定下一餐吧！</p>
-                            <div class="bg-white/80 border border-orange-100 rounded-[1.5rem] p-6 mb-6 h-[100px] flex items-center justify-center shadow-inner">
-                                <span class="text-2xl font-black text-orange-600 ${state.gachaAnimating ? 'animate-pulse' : ''}">${state.gachaResult || '❓ 點擊開始轉盤 ❓'}</span>
-                            </div>
-                            <button onclick="window.playGacha()" class="w-full bg-gradient-to-r from-orange-400 to-red-400 text-white font-black text-lg py-4 rounded-[1.5rem] shadow-md active:scale-95 flex items-center justify-center gap-2 border border-orange-400">
-                                ${state.gachaAnimating ? '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> 旋轉中...' : '🎲 轉盤啟動！'}
-                            </button>
-                        </div>
-                    </div>
-
+                    <!-- 4. 旅遊小書匯出 -->
                     <div class="glass-card rounded-[2.5rem] p-8 text-center shadow-md relative overflow-hidden mt-6">
                         <div class="relative z-10">
-                            <h3 class="font-black text-xl mb-3 text-[#4A3B32] flex items-center justify-center gap-2"><i data-lucide="book-open" class="w-6 h-6 text-sky-500"></i>旅遊小書匯出</h3>
-                            <p class="text-xs font-bold text-[#4A3B32]/60 mb-6">把我們的行程、照片和日記打包成 PDF 預覽留念！</p>
-                            <button onclick="window.openBookletPreview()" class="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white font-black text-lg py-4 rounded-[1.5rem] shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border border-sky-400">
+                            <h3 class="font-black text-[18px] mb-3 text-[#4A3B32] flex items-center justify-center gap-2"><i data-lucide="book-open" class="w-5 h-5 text-teal-500"></i>旅遊小書匯出</h3>
+                            <p class="text-[11px] font-bold text-[#4A3B32]/60 mb-6">把我們的行程、照片和日記打包成 PDF 預覽留念！</p>
+                            <button onclick="window.openBookletPreview()" class="w-full bg-gradient-to-r from-teal-400 to-emerald-500 text-white font-black text-[15px] py-3.5 rounded-[1.5rem] shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border border-teal-400">
                                 <i data-lucide="printer" class="w-5 h-5"></i> 預覽與匯出小書
                             </button>
                         </div>
@@ -852,7 +940,7 @@ html
                             <div class="space-y-0 min-h-[100px] relative z-10">${listHtml}</div>
                             ${!isGuest ? `
                             <div class="flex items-center gap-2 mt-6 pt-4 border-t-2 border-dashed border-sky-100 relative z-10">
-                                <input type="text" id="new-checklist-item" placeholder="新增 ${userProfiles[state.activeChecklistTab].name} 的行李..." onkeydown="if(event.key === 'Enter') window.addChecklistItem()" class="flex-1 bg-white border border-white shadow-sm rounded-[1.5rem] px-4 py-4 text-sm font-bold text-[#4A3B32] focus:ring-2 focus:ring-sky-300 focus:bg-white outline-none transition-colors" />
+                                <input type="text" id="new-checklist-item" placeholder="新增 ${userProfiles[state.activeChecklistTab].name} 的行李..." onkeydown="if(event.key === 'Enter') window.addChecklistItem()" class="flex-1 bg-white/90 border border-white shadow-sm rounded-[1.5rem] px-4 py-4 text-sm font-bold text-[#4A3B32] focus:ring-2 focus:ring-sky-300 focus:bg-white outline-none transition-colors" />
                                 <button onclick="window.addChecklistItem()" class="w-14 h-14 shrink-0 flex items-center justify-center bg-sky-500 text-white rounded-[1.5rem] shadow-sm active:scale-95 border border-sky-400"><i data-lucide="plus" class="w-6 h-6"></i></button>
                             </div>` : ''}
                         </div>
@@ -870,7 +958,7 @@ html
                         
                         return `
                             <div class="flex items-stretch gap-2 mb-3 last:mb-0 animate-fadeIn relative z-10">
-                                <div class="flex-1 flex items-center gap-3 p-3 rounded-[1.5rem] border border-white transition-all shadow-sm ${item.checked ? 'bg-white/50 opacity-60 grayscale' : 'bg-white/80'}">
+                                <div class="flex-1 flex items-center gap-3 p-3 rounded-[1.5rem] border border-white transition-all shadow-sm ${item.checked ? 'bg-white/50 opacity-60 grayscale' : 'bg-white/90'}">
                                     <button ${!isGuest ? `onclick="window.toggleShoppingItem(${item.id})"` : 'disabled'} class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full border-2 transition-colors ${item.checked ? 'bg-orange-500 border-orange-500 text-white' : 'border-orange-200 bg-white/50 text-transparent'}"><i data-lucide="check" class="w-4 h-4"></i></button>
                                     
                                     <div class="w-[70px] h-[70px] shrink-0 bg-gray-50 rounded-xl border border-gray-100 overflow-hidden flex items-center justify-center shadow-inner relative group">
@@ -959,12 +1047,12 @@ html
                             ${!isGuest ? `
                             <div class="mt-6 pt-4 border-t-2 border-dashed border-teal-100 relative z-10">
                                 <div class="flex gap-2 mb-3">
-                                    <button onclick="window.setWishCategory('food')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${state.wishCategory==='food'?'bg-orange-100/90 text-orange-600 border border-orange-200 shadow-sm':'bg-white text-gray-500 border border-white shadow-sm'}">🥭 想吃</button>
-                                    <button onclick="window.setWishCategory('spot')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${state.wishCategory==='spot'?'bg-blue-100/90 text-blue-600 border border-blue-200 shadow-sm':'bg-white text-gray-500 border border-white shadow-sm'}">🏖️ 想去</button>
-                                    <button onclick="window.setWishCategory('buy')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${state.wishCategory==='buy'?'bg-pink-100/90 text-pink-600 border border-pink-200 shadow-sm':'bg-white text-gray-500 border border-white shadow-sm'}">🛍️ 想買</button>
+                                    <button onclick="window.setWishCategory('food')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${state.wishCategory==='food'?'bg-orange-100/90 text-orange-600 border border-orange-200 shadow-sm':'bg-white/90 text-gray-500 border border-white shadow-sm'}">🥭 想吃</button>
+                                    <button onclick="window.setWishCategory('spot')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${state.wishCategory==='spot'?'bg-blue-100/90 text-blue-600 border border-blue-200 shadow-sm':'bg-white/90 text-gray-500 border border-white shadow-sm'}">🏖️ 想去</button>
+                                    <button onclick="window.setWishCategory('buy')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${state.wishCategory==='buy'?'bg-pink-100/90 text-pink-600 border border-pink-200 shadow-sm':'bg-white/90 text-gray-500 border border-white shadow-sm'}">🛍️ 想買</button>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <input type="text" id="new-wish-item" placeholder="例如：吃火山排骨..." onkeydown="if(event.key === 'Enter') window.addWish()" class="flex-1 bg-white border border-white shadow-sm rounded-[1.5rem] px-4 py-4 text-sm font-bold text-[#4A3B32] focus:ring-2 focus:ring-teal-300 focus:bg-white outline-none transition-colors" />
+                                    <input type="text" id="new-wish-item" placeholder="例如：吃火山排骨..." onkeydown="if(event.key === 'Enter') window.addWish()" class="flex-1 bg-white/90 border border-white shadow-sm rounded-[1.5rem] px-4 py-4 text-sm font-bold text-[#4A3B32] focus:ring-2 focus:ring-teal-300 focus:bg-white outline-none transition-colors" />
                                     <button onclick="window.addWish()" class="w-14 h-14 shrink-0 flex items-center justify-center bg-gradient-to-r from-teal-400 to-emerald-500 text-white rounded-[1.5rem] shadow-sm active:scale-95 border border-teal-400"><i data-lucide="send" class="w-5 h-5"></i></button>
                                 </div>
                             </div>` : ''}
@@ -1011,6 +1099,23 @@ html
                             </div>
                             <div class="grid grid-cols-2 gap-4 relative z-10 mb-5">${createBtn('peilin')}${createBtn('mom')}${createBtn('chihjung')}${createBtn('chunyen')}</div>
                             <div class="flex justify-center relative z-10 border-t-2 border-dashed border-orange-200/60 pt-5">${createBtn('guest', true)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (state.cardModal.isOpen) {
+                html += `
+                    <div class="fixed inset-0 z-[200] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-5 print-hide" onclick="window.closeCardModal()">
+                        <div class="bg-white w-full max-w-[320px] rounded-[2.5rem] p-8 shadow-2xl text-center animate-pop border-4 border-sky-100 relative overflow-hidden" onclick="event.stopPropagation()">
+                            <div class="absolute -top-10 -right-10 w-32 h-32 bg-sky-100 rounded-full blur-3xl z-0"></div>
+                            <div class="relative z-10">
+                                <div class="text-4xl mb-4">${state.cardModal.icon}</div>
+                                <div class="text-[34px] font-black text-sky-600 mb-6 py-4 bg-sky-50 rounded-2xl shadow-inner border border-sky-100 leading-tight">${state.cardModal.th}</div>
+                                <div class="text-[22px] font-black text-[#4A3B32] mb-3">${state.cardModal.ch}</div>
+                                <div class="text-[13px] font-bold text-gray-500 mb-8 bg-gray-50 inline-block px-4 py-1.5 rounded-full border border-gray-100">${state.cardModal.pron}</div>
+                                <button onclick="window.closeCardModal()" class="w-full bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#4A3B32] font-black py-3.5 rounded-[1.5rem] shadow-sm active:scale-95 transition-colors border border-white">關閉字卡</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1270,6 +1375,27 @@ html
         window.switchChecklistTab = (tabId) => { state.activeChecklistTab = tabId; window.renderDOM(); };
         window.triggerPhotoUpload = () => { document.getElementById('photo-upload').click(); };
         
+        // 🌟 新增：口袋名單相關操作
+        window.switchPocketTab = (tab) => { state.pocketTab = tab; state.gachaResult = null; window.renderDOM(); };
+        window.openAddModalPrefilled = (name, type) => { 
+            state.formData = { type: type, time: '', location: name, notes: '', detail: '', highlights: '' }; 
+            state.modalConfig = { isOpen: true, isEdit: false, dayId: state.activeDay, index: null }; 
+            window.renderDOM(); 
+        };
+        window.playPocketGacha = () => {
+            if (state.gachaAnimating) return; state.gachaAnimating = true; window.renderDOM();
+            const opts = pocketList[state.pocketTab].map(i => i.name);
+            let ticks = 0;
+            const int = setInterval(() => {
+                state.gachaResult = opts[Math.floor(Math.random() * opts.length)]; window.renderDOM(); ticks++;
+                if(ticks > 15) { clearInterval(int); state.gachaAnimating = false; state.gachaResult = `🐘 去【${state.gachaResult}】！讚啦！`; window.renderDOM(); }
+            }, 100);
+        };
+        
+        // 🌟 新增：求生字卡相關操作
+        window.openCardModal = (th, ch, pron, icon) => { state.cardModal = { isOpen: true, th, ch, pron, icon }; window.renderDOM(); };
+        window.closeCardModal = () => { state.cardModal.isOpen = false; window.renderDOM(); };
+
         window.handlePhotoUpload = (e) => {
             const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
             reader.onload = (event) => {
@@ -1287,15 +1413,7 @@ html
         };
 
         window.deleteMemory = (id) => { state.memories = state.memories.filter(m => String(m.id) !== String(id)); window.saveToCloud(); };
-        window.playGacha = () => {
-            if (state.gachaAnimating) return; state.gachaAnimating = true; window.renderDOM();
-            const opts = ['打拋豬 🍛', '泰式炒河粉 🍝', '冬蔭功湯 🦐', '芒果糯米飯 🥭', '咖哩螃蟹 🦀', '香蕉煎餅 🍌', '泰式烤肉串 🍢', '青木瓜沙拉 🥗', '火山排骨 🌋']; let ticks = 0;
-            const int = setInterval(() => {
-                state.gachaResult = opts[Math.floor(Math.random() * opts.length)]; window.renderDOM(); ticks++;
-                if(ticks > 15) { clearInterval(int); state.gachaAnimating = false; state.gachaResult = `🐘 小象說：吃【${state.gachaResult}】！讚啦！`; window.renderDOM(); }
-            }, 100);
-        };
-
+        
         window.toggleCheck = (id) => { state.checklist = state.checklist.map(i => String(i.id) === String(id) ? { ...i, checked: !i.checked } : i); window.saveToCloud(); };
         window.addChecklistItem = () => { const input = document.getElementById('new-checklist-item'); if (!input.value.trim()) return; state.checklist.push({ id: Date.now(), text: input.value.trim(), checked: false, assignee: state.activeChecklistTab }); input.value = ''; window.saveToCloud(); };
         window.editChecklistItem = (id) => { const item = state.checklist.find(i => String(i.id) === String(id)); if (item) { const newText = prompt('修改行李項目：', item.text); if (newText !== null && newText.trim() !== '') { state.checklist = state.checklist.map(i => String(i.id) === String(id) ? { ...i, text: newText.trim() } : i); window.saveToCloud(); } } };
@@ -1316,7 +1434,7 @@ html
             state.formData.addedBy = state.currentUser || 'peilin';
             const dayList = [...(state.itinerary[state.modalConfig.dayId] || [])];
             if (state.modalConfig.isEdit) dayList[state.modalConfig.index] = state.formData; else dayList.push(state.formData);
-            dayList.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+            // dayList.sort((a, b) => (a.time || '').localeCompare(b.time || '')); // 移除自動排序，讓手動排列維持原樣
             state.itinerary[state.modalConfig.dayId] = dayList;
             state.modalConfig.isOpen = false; window.saveToCloud(); 
         };
@@ -1330,7 +1448,7 @@ html
         
         window.toggleAI = (idx) => {
             const box = document.getElementById(`ai-box-${idx}`); const btn = document.getElementById(`ai-btn-${idx}`); if (!box || !btn) return;
-            if (box.classList.contains('hidden')) { box.classList.remove('hidden'); box.classList.add('block'); btn.className = "flex items-center gap-1.5 px-3.5 py-2 rounded-full font-black active:scale-95 border shadow-sm bg-orange-500 text-white border-orange-500 transition-colors"; } 
+            if (box.classList.contains('hidden')) { box.classList.remove('hidden'); box.classList.add('block'); btn.className = "flex items-center gap-1.5 px-3.5 py-2 rounded-full font-black active:scale-95 border shadow-sm bg-orange-500 text-white border-orange-500 transition-colors hover:bg-orange-600"; } 
             else { box.classList.add('hidden'); box.classList.remove('block'); btn.className = "flex items-center gap-1.5 px-3.5 py-2 rounded-full font-black active:scale-95 border shadow-sm border-white bg-white text-orange-500 transition-colors hover:bg-orange-50"; }
         };
 
